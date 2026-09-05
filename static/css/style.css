@@ -1,3 +1,7 @@
+/* ==========================================================================
+   1. VARIABLES & RESET
+   ========================================================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -5,23 +9,35 @@
 }
 
 :root {
-    --ink: #1c1917;
-    --paper: #faf6f0;
-    --accent: #d95d39;
-    --accent-dark: #a8442a;
-    --line: #e3d9c9;
-    --text-muted: #6b6459;
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --ink: #e8e8e8;
+    --accent: #00e5ff;
+    --accent-dim: #00a3b8;
+    --line: #2a2a2a;
+    --text-muted: #8a8a8a;
+    --neon-yellow: #fff01f;
     --radius: 4px;
 }
 
+
+/* ==========================================================================
+   2. TYPOGRAPHY & BASE LAYOUT
+   ========================================================================== */
+
 body {
+    background-color: var(--bg);
     font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--ink);
-    background-color: var(--paper);
     line-height: 1.6;
 }
 
-h1, .brand {
+h2 {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    color: var(--neon-yellow);
+}
+
+h1, h3, .brand {
     font-family: "Space Grotesk", -apple-system, sans-serif;
 }
 
@@ -31,22 +47,46 @@ h1, .brand {
     padding: 0 1.5rem;
 }
 
+section {
+    padding: 4rem 0;
+}
+
+.section-title {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+
+/* ==========================================================================
+   3. HEADER & NAVIGATION
+   ========================================================================== */
+
 .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     border-bottom: 1px solid var(--line);
+    background-color: var(--bg);
 }
 
 .site-header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 1.5rem;
+    padding: 0.75rem 1.5rem;
 }
 
 .brand {
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--ink);
+    color: var(--neon-yellow);
     text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.brand:hover {
+    opacity: 0.7;
 }
 
 .site-header nav {
@@ -58,10 +98,21 @@ h1, .brand {
     color: var(--ink);
     text-decoration: none;
     font-size: 0.95rem;
+    transition: color 0.2s ease;
 }
+
+.site-header nav a:hover {
+    color: var(--neon-yellow);
+}
+
+
+/* ==========================================================================
+   4. HERO SECTION (PROFILE & BIO)
+   ========================================================================== */
 
 .hero {
     padding: 4.5rem 0 5rem;
+    color: var(--ink);
 }
 
 .hero-grid {
@@ -85,7 +136,7 @@ h1, .brand {
     font-size: 0.85rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--accent-dark);
+    color: var(--accent-dim);
     font-weight: 700;
     margin-bottom: 0.75rem;
 }
@@ -130,14 +181,15 @@ h1, .brand {
     font-size: 0.85rem;
     font-weight: 600;
     text-decoration: none;
-    color: var(--paper);
-    background-color: var(--ink);
+    color: var(--ink);
+    background-color: var(--surface);
     border-radius: var(--radius);
     padding: 0.5rem 1.1rem;
     transition: background-color 0.2s ease;
 }
 
 .social-link:hover {
+    color: var(--bg);
     background-color: var(--accent);
 }
 
@@ -154,7 +206,7 @@ h1, .brand {
     width: 100%;
     height: 100%;
     background-color: var(--accent);
-    border-radius: var(--radius);
+    border-radius: 50%;
     z-index: 0;
 }
 
@@ -165,9 +217,61 @@ h1, .brand {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: var(--radius);
+    border-radius: 50%;
     border: 3px solid var(--ink);
 }
+
+
+/* ==========================================================================
+   5. RELEVANT COURSEWORK SECTION
+   ========================================================================== */
+
+.coursework-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+
+.course-card {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.course-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+}
+
+.course-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-dim);
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.course-name {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.15rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.course-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+
+/* ==========================================================================
+   6. FOOTER
+   ========================================================================== */
 
 .site-footer {
     padding: 1.5rem;
@@ -175,6 +279,11 @@ h1, .brand {
     font-size: 0.85rem;
     border-top: 1px solid var(--line);
 }
+
+
+/* ==========================================================================
+   7. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
 
 @media (max-width: 600px) {
     .hero-grid {
