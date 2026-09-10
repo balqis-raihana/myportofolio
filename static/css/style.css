@@ -398,6 +398,24 @@ section {
     font-weight: 600;
 }
 
+.timeline-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.timeline-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius);
+}
+
 
 /* ==========================================================================
    7. FOOTER

@@ -46,7 +46,7 @@ class MainTest(TestCase):
         self.assertContains(response, self.experience.title)
         self.assertContains(response, self.experience.description)
         self.assertContains(response, "Part-Time")
-        self.assertContains(response, "Sedang berlangsung")
+        self.assertContains(response, "Ongoing")
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
         self.assertContains(response, f'href="{reverse("main:show_coursework")}"')
 
@@ -54,7 +54,7 @@ class MainTest(TestCase):
         Experience.objects.all().delete()
         response = self.client.get(reverse("main:show_experience"))
 
-        self.assertContains(response, "Belum ada pengalaman yang ditambahkan.")
+        self.assertContains(response, "No experiences added yet.")
 
     def test_completed_experience(self):
         self.experience.ended_at = timezone.now()
@@ -62,8 +62,8 @@ class MainTest(TestCase):
         response = self.client.get(reverse("main:show_experience"))
 
         self.assertFalse(self.experience.is_ongoing)
-        self.assertContains(response, "Selesai")
-        self.assertNotContains(response, "Sedang berlangsung")
+        self.assertContains(response, "Completed")
+        self.assertNotContains(response, "Ongoing")
 
     def test_coursework_model(self):
         self.assertEqual(str(self.coursework), "Business Management")
@@ -85,4 +85,4 @@ class MainTest(TestCase):
         Coursework.objects.all().delete()
         response = self.client.get(reverse("main:show_coursework"))
 
-        self.assertContains(response, "Belum ada coursework yang ditambahkan.")
+        self.assertContains(response, "Belum ada coursework yang ditambahkan.")
