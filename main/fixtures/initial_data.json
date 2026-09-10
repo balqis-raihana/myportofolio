@@ -1,0 +1,214 @@
+[
+{
+  "model": "main.experience",
+  "pk": "118f5fde-9da3-4b5f-b4ca-51544c7ddf70",
+  "fields": {
+    "title": "Member of Earth and Ocean Sciences",
+    "company": "Kelompok Ilmiah Remaja 13 Jakarta",
+    "description": "Mainly organized weekly meetings about oceans and geography.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2022-08-10T18:21:28Z",
+    "ended_at": "2023-10-10T18:22:13Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "17a26025-7de5-4bfd-8022-4f2b08e06d15",
+  "fields": {
+    "title": "Staff of Documentation and Cinematography",
+    "company": "Open House Fasilkom UI",
+    "description": "Co-directed and shot the Virtual Campus Tour to showcase faculty facilities and student life. Also documented the main event, capturing key moments and activities for archival and promotional use.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2025-08-10T18:08:33Z",
+    "ended_at": "2025-12-10T18:09:45Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "4606427e-7057-4294-aff0-c39f4d24716b",
+  "fields": {
+    "title": "Teaching Assistant for Business Management",
+    "company": "Fakultas Ilmu Komputer, Universitas Indonesia",
+    "description": "Supporting a class of 55 students alongside a fellow TA. Responsible for evaluating assignments, providing feedback, answering academic questions, and facilitating consultations for business plans and case studies, while coordinating project consultation sessions and class administration through Moodle, Google Sheets, WhatsApp, and Discord.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2026-07-20T10:07:50Z",
+    "ended_at": null
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "4f8c2ecd-89b1-43e3-8275-dd6dc6a082e8",
+  "fields": {
+    "title": "Staff of Administration for AI Innovation Challenge (AIC)",
+    "company": "Compfest 18",
+    "description": "Supported the participant-facing administrative operations throughout the competition. My responsibilities included verifying registration documents and participant eligibility, monitoring submissions, tracking seminar attendance for bonus-point calculation, and handling administrative issues such as incomplete documents and eligibility discrepancies.\r\n\r\nI also managed participant communications through Discord by delivering competition announcements and responding to administrative inquiries. The role involved supporting a participant pool of 1,357 participants organized into teams of 3–5, while coordinating task distribution and administrative workflows with PICs and fellow committee members. I worked primarily with the competition’s admin dashboard, Discord, and Google Sheets.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2026-04-07T17:59:57Z",
+    "ended_at": null
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "5cb63fe4-32ca-487c-9fa8-6215f4967d4a",
+  "fields": {
+    "title": "Staff of Departemen Akademi dan Profesi",
+    "company": "BEM Fakultas Ilmu Komputer Universitas Indonesia",
+    "description": "Currently coordinating GrowTogether 2026, a career-oriented program featuring workshops, seminars, focus group discussions, and networking sessions for Fasilkom UI students. Involved in market research, event planning, speaker and alumni outreach, stakeholder coordination, and developing supporting materials such as proposals, Terms of Reference, forms, and spreadsheets, while collaborating with fellow staff, department heads, and Sekolah BEM Fasilkom.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2026-05-06T17:49:01Z",
+    "ended_at": null
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "6143db8e-251f-4dd3-bcf0-c6ffcf296f98",
+  "fields": {
+    "title": "English Translator",
+    "company": "SMA Negeri 13 Jakarta",
+    "description": "Introduced Jakarta’s local cuisines to international Formula E team delegations during a school visit. Facilitated communication between local hosts and foreign guests in an informal setting. Supported cross-cultural engagement and enhanced visitor experience.",
+    "category": "volunteer",
+    "thumbnail": null,
+    "started_at": "2023-05-10T18:18:51Z",
+    "ended_at": "2023-06-10T18:20:00Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "6b075101-ed6e-447f-88c5-b1ff8a6217c7",
+  "fields": {
+    "title": "Mentor/Tutor",
+    "company": "Dasar-dasar Pemrograman 0",
+    "description": "Introducing the programming language: Python to freshmen who are unfamiliar with programming/coding.",
+    "category": "volunteer",
+    "thumbnail": null,
+    "started_at": "2026-06-04T17:46:04Z",
+    "ended_at": "2026-08-26T17:48:27Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "8e0fd6ed-f8ab-418f-9ebe-3cf3ff28f6f6",
+  "fields": {
+    "title": "Ristek Tutor for Discrete Mathematics I",
+    "company": "RISTEK Fasilkom UI",
+    "description": "Paid-by-request tutoring for the Discrete Mathematics I course",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2026-03-18T18:02:50Z",
+    "ended_at": null
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "92dd4b46-70bb-4d3e-b7d6-95e2029377e4",
+  "fields": {
+    "title": "Event Coordinator Social Project S1 Group",
+    "company": "Sospro PMB Fasilkom UI",
+    "description": "Coordinated community outreach event in Tanjung Barat with Sospro Fasilkom UI, themed “Smart Kids, Smart Gadgets”, focused on socializing with orphans. Managed the overall flow of the event, including MCs, rundowns, and workshops (painting totebags). Collaborated with multiple divisions (core, games, education, and others) to ensure smooth execution.",
+    "category": "volunteer",
+    "thumbnail": null,
+    "started_at": "2025-09-10T18:11:26Z",
+    "ended_at": "2025-09-10T18:12:27Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "975005df-5671-4893-84ab-cbf6c3095517",
+  "fields": {
+    "title": "Staff of Public Relations",
+    "company": "BETIS Fasilkom UI (Bimbingan BElajar GraTIS))",
+    "description": "Created promotional content and handled basic media editing for @betisfasilkomui, conducted school outreach and broadcasting activities to promote educational programs, and occasionally served as Master of Ceremony (MC) for events and socialization sessions.",
+    "category": "volunteer",
+    "thumbnail": null,
+    "started_at": "2026-01-07T18:06:52Z",
+    "ended_at": "2026-07-08T18:08:08Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "a3a27aa7-ce45-4cb3-9c5f-47d97ff59008",
+  "fields": {
+    "title": "President",
+    "company": "Kelompok Ilmiah Remaja 13 Jakarta",
+    "description": "Managed the annual work program, scheduling and overseeing weekly, monthly, and yearly scientific activities and experiments across four divisions: Engineering, Biology, Earth and Ocean Sciences, and Social Humanities. Facilitated collaboration with external organizations, including the Sirius Astronomy Club of SMAN 89 Jakarta, promoting inter-club comparative scientific studies and expanding the group's network. Revitalized ties with FOSCA, reestablishing important regional collaborations previously neglected, enhancing the organization's influence and opportunities in the JABODETABEK scientific community. Supervised a membership base of approximately 60 members, with active engagement from around 30 members, fostering a collaborative and productive environment.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2023-10-10T18:12:41Z",
+    "ended_at": "2024-10-10T18:14:55Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "b8edb204-4797-4b06-b207-6f68b15b902e",
+  "fields": {
+    "title": "Intern of Departemen Pengembangan Karier dan Keilmuan Mahasiswa (PKKM)",
+    "company": "BEM Fakultas Ilmu Komputer Universitas Indonesia",
+    "description": "Led coordination as PIC for GrowTo Seminar 2025, managing cross-division communication, aligning timelines, and driving decision-making to ensure program clarity. Structured the event workflow end-to-end, including agenda design, speaker flow, and inter-division alignment. Provided operational oversight during the event, ensuring rundown discipline, continuity between segments, and real-time issue resolution.",
+    "category": "internship",
+    "thumbnail": null,
+    "started_at": "2025-09-10T18:09:56Z",
+    "ended_at": "2025-11-10T18:10:56Z"
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "d88d7ea8-6caa-4232-abea-f000eaec5675",
+  "fields": {
+    "title": "Member of Data Science",
+    "company": "Google Developer Groups on Campus UI",
+    "description": "Attended meetings about Data Science with Peer Mentors",
+    "category": "volunteer",
+    "thumbnail": null,
+    "started_at": "2026-01-01T18:04:34Z",
+    "ended_at": null
+  }
+},
+{
+  "model": "main.experience",
+  "pk": "dcbf9194-0acd-4048-997b-03053c7c2cf8",
+  "fields": {
+    "title": "Vice President II",
+    "company": "OSIS SMP Negeri 30 Jakarta",
+    "description": "Managed school events during COVID-19 era, figured ways to make the events immersive and entertaining while maintaining the protocols.",
+    "category": "part-time",
+    "thumbnail": null,
+    "started_at": "2020-10-10T18:22:16Z",
+    "ended_at": "2021-10-10T18:22:50Z"
+  }
+},
+{
+  "model": "main.coursework",
+  "pk": "056ed522-a446-4052-9bef-b84a9d122590",
+  "fields": {
+    "name": "Business Management",
+    "category": "Management & Strategy",
+    "description": "Fundamental principles of organizational strategy, business planning, financial evaluation, and business case analysis. Focuses on developing strategic holistic thinking and decision-making skills for various business contexts.",
+    "credits": 3
+  }
+},
+{
+  "model": "main.coursework",
+  "pk": "4370c002-b541-4758-8114-169695c99661",
+  "fields": {
+    "name": "Business and Technical Communications",
+    "category": "Communication & Presentation",
+    "description": "Focuses on enhancing communication skills in professional and technical contexts through structured writing, presentation techniques, and business-oriented messaging strategies.",
+    "credits": 3
+  }
+},
+{
+  "model": "main.coursework",
+  "pk": "6efbf9c5-ca47-4aee-b6f2-2b8c9321a05d",
+  "fields": {
+    "name": "Principles of Information Systems",
+    "category": "Core Information Systems",
+    "description": "Exploring fundamental concepts of information systems, including their role in organizations and society. This course covers how technology is used to collect, process, store, and distribute information to support decision-making and business operations.",
+    "credits": 3
+  }
+}
+]
