@@ -25,3 +25,14 @@ class Experience(models.Model):
     @property
     def is_ongoing(self):
         return self.ended_at is None
+
+
+class Coursework(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    category = models.CharField(max_length=100)
+    description = models.TextField()
+    credits = models.IntegerField(default=3)
+
+    def __str__(self):
+        return self.name
