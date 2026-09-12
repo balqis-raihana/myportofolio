@@ -105,6 +105,35 @@ section {
     color: var(--neon-yellow);
 }
 
+/* Dropdown navigation */
+.nav-item {
+    display: inline-block;
+    position: relative;
+}
+.nav-item .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    min-width: 150px;
+    z-index: 2000;
+}
+.nav-item:hover .nav-dropdown {
+    display: block;
+}
+.nav-dropdown a {
+    display: block;
+    padding: 0.4rem 0.8rem;
+    color: var(--ink);
+    text-decoration: none;
+}
+.nav-dropdown a:hover {
+    background-color: var(--surface);
+    color: var(--neon-yellow);
+}
+
 
 /* ==========================================================================
    4. HERO SECTION (PROFILE & BIO)
@@ -432,3 +461,98 @@ section {
         justify-content: flex-start;
     }
 }
+
+
+/* ==========================================================================
+   8. COURSEWORK DETAIL PAGE
+   ========================================================================== */
+
+/* Make the entire course card clickable */
+.course-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+.course-card-link:hover .course-card {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* Breadcrumb trail */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+.breadcrumb a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.breadcrumb a:hover {
+    color: var(--neon-yellow);
+}
+.breadcrumb-sep {
+    color: var(--line);
+}
+
+/* Detail page layout */
+.coursework-detail-section {
+    padding: 4rem 0;
+}
+.course-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.75rem 0 1.25rem;
+}
+.course-credits {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.15rem 0.55rem;
+}
+.detail-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+}
+
+/* Journal block */
+.journal-section {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+    margin-bottom: 2.5rem;
+}
+.journal-title {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+.journal-body {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--ink);
+    white-space: pre-wrap;
+}
+
+/* Back link */
+.back-link {
+    display: inline-block;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: var(--neon-yellow);
+}

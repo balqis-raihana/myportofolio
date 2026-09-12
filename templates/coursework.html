@@ -18,7 +18,15 @@
             <nav>
                 <a href="{% url 'main:show_main' %}">Profile</a>
                 <a href="{% url 'main:show_experience' %}">Experience</a>
-                <a href="{% url 'main:show_coursework' %}">Coursework</a>
+                <span class="nav-item">
+                    <a href="{% url 'main:show_coursework' %}">Coursework ▾</a>
+                    <ul class="nav-dropdown">
+                        <li><a href="{% url 'main:show_coursework' %}">All Courses</a></li>
+                        {% for c in coursework_list %}
+                            <li><a href="{% url 'main:show_coursework_detail' c.id %}">{{ c.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </span>
             </nav>
         </div>
     </header>
@@ -31,11 +39,13 @@
 
                 <div class="coursework-grid">
                     {% for course in coursework_list %}
-                        <article class="course-card">
-                            <span class="course-tag">{{ course.category }}</span>
-                            <h2 class="course-name">{{ course.name }}</h2>
-                            <p class="course-desc">{{ course.description }}</p>
-                        </article>
+                        <a href="{% url 'main:show_coursework_detail' course.id %}" class="course-card-link">
+                            <article class="course-card">
+                                <span class="course-tag">{{ course.category }}</span>
+                                <h2 class="course-name">{{ course.name }}</h2>
+                                <p class="course-desc">{{ course.description }}</p>
+                            </article>
+                        </a>
                     {% empty %}
                         <p class="empty-state">Belum ada coursework yang ditambahkan.</p>
                     {% endfor %}

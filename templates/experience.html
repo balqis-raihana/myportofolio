@@ -18,7 +18,15 @@
             <nav>
                 <a href="{% url 'main:show_main' %}">Profile</a>
                 <a href="{% url 'main:show_experience' %}">Experience</a>
-                <a href="{% url 'main:show_coursework' %}">Coursework</a>
+                <span class="nav-item">
+                    <a href="{% url 'main:show_coursework' %}">Coursework ▾</a>
+                    <ul class="nav-dropdown">
+                        <li><a href="{% url 'main:show_coursework' %}">All Courses</a></li>
+                        {% for c in coursework_list %}
+                            <li><a href="{% url 'main:show_coursework_detail' c.id %}">{{ c.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </span>
             </nav>
         </div>
     </header>
@@ -29,23 +37,19 @@
                 <p class="section-kicker">Perjalanan saya sejauh ini</p>
                 <h1>Experience</h1>
 
-                <div class="experience-grid">
+                <div class="timeline">
                     {% for experience in experience_list %}
-                        <article class="experience-card">
-                            <span class="experience-category">
-                                {{ experience.get_category_display }}
-                            </span>
-                            <h2>{{ experience.title }}</h2>
-                            <p class="experience-description">
-                                {{ experience.description }}
-                            </p>
-
+                        <div class="timeline-item">
+                            <span class="timeline-marker"></span>
+                            <span class="timeline-date">{{ experience.get_category_display }}</span>
+                            <h2 class="timeline-role">{{ experience.title }}</h2>
+                            <p class="timeline-desc">{{ experience.description }}</p>
                             {% if experience.is_ongoing %}
-                                <p class="experience-status">Sedang berlangsung</p>
+                                <p class="timeline-org">Sedang berlangsung</p>
                             {% else %}
-                                <p class="experience-status">Selesai</p>
+                                <p class="timeline-org">Selesai</p>
                             {% endif %}
-                        </article>
+                        </div>
                     {% empty %}
                         <p class="empty-state">
                             Belum ada pengalaman yang ditambahkan.

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ name }} - Portfolio</title>
+    <title>{{ course.name }} – Coursework – {{ name }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -31,35 +31,39 @@
         </div>
     </header>
 
-    <main>
-        <section class="hero" id="profile">
-            <div class="container hero-grid">
-                <div class="hero-identity">
-                    <p class="hero-kicker">Information Systems &middot; Universitas Indonesia</p>
-                    <h1>{{ name }}</h1>
+    <main class="fade-in">
+        <section class="coursework-detail-section" id="coursework-detail">
+            <div class="container">
+
+                <nav class="breadcrumb" aria-label="Breadcrumb">
+                    <a href="{% url 'main:show_main' %}">Home</a>
+                    <span class="breadcrumb-sep">›</span>
+                    <a href="{% url 'main:show_coursework' %}">Coursework</a>
+                    <span class="breadcrumb-sep">›</span>
+                    <span>{{ course.name }}</span>
+                </nav>
+
+                <p class="section-kicker">Course Detail</p>
+                <h1 class="section-title">{{ course.name }}</h1>
+                <span class="course-tag">{{ course.category }}</span>
+
+                <div class="course-detail-meta">
+                    <span class="course-credits">{{ course.credits }} Credits</span>
                 </div>
-                <div class="hero-photo">
-                    <div class="photo-block"></div>
-                    <img class="avatar" src="/static/img/Balqis.JPEG" alt="Photo of {{ name }}">
+
+                <p class="course-desc detail-desc">{{ course.description }}</p>
+
+                <div class="journal-section">
+                    <h2 class="journal-title">Journal — What I Did</h2>
+                    {% if course.journal %}
+                        <div class="journal-body">{{ course.journal|linebreaksbr }}</div>
+                    {% else %}
+                        <p class="empty-state">No journal entry yet. Add one via the Admin panel.</p>
+                    {% endif %}
                 </div>
-                <div class="hero-details">
-                    <p class="bio">{{ bio }}</p>
-                    <dl class="meta-list">
-                        <div class="meta-row">
-                            <dt>NPM</dt>
-                            <dd>{{ npm }}</dd>
-                        </div>
-                        <div class="meta-row">
-                            <dt>Program</dt>
-                            <dd>{{ study_program }}</dd>
-                        </div>
-                    </dl>
-                    <div class="social-links">
-                        <a href="https://github.com/balqis-raihana" class="social-link">GitHub</a>
-                        <a href="https://linkedin.com/in/balqis-raihana/" class="social-link">LinkedIn</a>
-                        <a href="mailto:balqis.raihana@ui.ac.id" class="social-link">Email</a>
-                    </div>
-                </div>
+
+                <a href="{% url 'main:show_coursework' %}" class="back-link">← Back to Coursework</a>
+
             </div>
         </section>
     </main>

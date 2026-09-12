@@ -15,7 +15,7 @@ def create_superuser(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('main', '0004_experience_company'),  # matches your previous migration
+        ('main', '0002_coursework'),  # last migration on tugas-2 branch
     ]
 
     operations = [
