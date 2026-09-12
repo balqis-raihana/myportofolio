@@ -68,6 +68,7 @@ section {
     z-index: 1000;
     border-bottom: 1px solid var(--line);
     background-color: var(--bg);
+    opacity: 0.8;
 }
 
 .site-header .container {
@@ -101,8 +102,15 @@ section {
     transition: color 0.2s ease;
 }
 
+.site-header nav a {
+    display: inline-block;  /* lets padding actually create a proper box */
+    padding: 0.4rem 0.1rem;
+}
+
 .site-header nav a:hover {
-    color: var(--neon-yellow);
+    color: var(--surface);
+    background-color: var(--neon-yellow);
+    border-radius: var(--radius);
 }
 
 /* Dropdown navigation */
@@ -119,6 +127,8 @@ section {
     border: 1px solid var(--line);
     min-width: 150px;
     z-index: 2000;
+    list-style: none;
+    padding: 0.25rem 0;
 }
 .nav-item:hover .nav-dropdown {
     display: block;
@@ -250,6 +260,60 @@ section {
     border: 3px solid var(--ink);
 }
 
+.education-title {
+    color: var(--neon-yellow);
+}
+
+.education-timeline .timeline-role {
+    color: var(--neon-yellow);
+}
+
+.education-timeline .timeline-marker {
+    background-color: var(--neon-yellow);
+    box-shadow: 0 0 0 2px var(--neon-yellow);
+}
+
+.interests {
+    padding: 4rem 0;
+    background-color: var(--bg);
+}
+
+.interests .section-title {
+    margin-bottom: 2rem;
+}
+
+.interests-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.interest-item {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.4rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.interest-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px var(--accent);
+}
+
+.interest-item h3 {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.2rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.interest-item p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
 
 /* ==========================================================================
    5. RELEVANT COURSEWORK SECTION
@@ -378,106 +442,28 @@ section {
     padding: 2rem 0;
 }
 
-.experience-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+.timeline-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
 }
 
-.experience-card {
+.timeline-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink);
     background-color: var(--surface);
     border: 1px solid var(--line);
+    padding: 0.15rem 0.5rem;
     border-radius: var(--radius);
-    padding: 1.5rem;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.experience-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-3px);
-}
-
-.experience-category {
-    display: inline-block;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--accent-dim);
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-}
-
-.experience-card h2 {
-    font-family: "Space Grotesk", -apple-system, sans-serif;
-    font-size: 1.25rem;
-    color: var(--ink);
-    margin-bottom: 0.5rem;
-}
-
-.experience-description {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 1rem;
-}
-
-.experience-status {
-    font-size: 0.8rem;
-    color: var(--accent);
-    font-weight: 600;
 }
 
 
 /* ==========================================================================
-   7. FOOTER
+   7. COURSEWORK DETAIL PAGE
    ========================================================================== */
-
-.site-footer {
-    padding: 1.5rem;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--line);
-}
-
-
-/* ==========================================================================
-   8. RESPONSIVE MEDIA QUERIES
-   ========================================================================== */
-
-@media (max-width: 600px) {
-    .hero-grid {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "identity"
-            "photo"
-            "details";
-    }
-
-    .hero-photo {
-        max-width: 220px;
-    }
-
-    .social-links {
-        justify-content: flex-start;
-    }
-}
-
-
-/* ==========================================================================
-   8. COURSEWORK DETAIL PAGE
-   ========================================================================== */
-
-/* Make the entire course card clickable */
-.course-card-link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-}
-.course-card-link:hover .course-card {
-    border-color: var(--accent);
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-}
 
 /* Breadcrumb trail */
 .breadcrumb {
@@ -555,4 +541,39 @@ section {
 }
 .back-link:hover {
     color: var(--neon-yellow);
-}
+}
+
+
+/* ==========================================================================
+   8. FOOTER
+   ========================================================================== */
+
+.site-footer {
+    padding: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--line);
+}
+
+
+/* ==========================================================================
+   9. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 600px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "identity"
+            "photo"
+            "details";
+    }
+
+    .hero-photo {
+        max-width: 220px;
+    }
+
+    .social-links {
+        justify-content: flex-start;
+    }
+}

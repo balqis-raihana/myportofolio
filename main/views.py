@@ -21,7 +21,7 @@ def show_main(request):
 def show_experience(request):
     context = {
         "name": "Balqis Raihana",
-        "experience_list": Experience.objects.all(),
+        "experience_list": Experience.objects.all().order_by('-started_at'),
         "coursework_list": Coursework.objects.all(),
     }
     return render(request, "experience.html", context)
@@ -42,4 +42,4 @@ def show_coursework_detail(request, pk):
         "course": course,
         "coursework_list": Coursework.objects.all(),
     }
-    return render(request, "coursework_detail.html", context)
+    return render(request, "coursework_detail.html", context)

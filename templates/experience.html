@@ -34,25 +34,43 @@
     <main>
         <section class="experience-section" id="experience">
             <div class="container">
-                <p class="section-kicker">Perjalanan saya sejauh ini</p>
-                <h1>Experience</h1>
+                <p class="section-kicker">My journey so far</p>
+                <h1 class="section-title">Experience</h1>
 
+                <!-- Container Timeline Vertikal -->
                 <div class="timeline">
                     {% for experience in experience_list %}
-                        <div class="timeline-item">
-                            <span class="timeline-marker"></span>
-                            <span class="timeline-date">{{ experience.get_category_display }}</span>
+                        <article class="timeline-item">
+                            <!-- Titik bulat -->
+                            <div class="timeline-marker"></div>
+
+                            <!-- Baris tanggal & status (ongoing / completed) -->
+                            <div class="timeline-meta">
+                                <time class="timeline-date">
+                                    {{ experience.started_at|date:"M Y" }} — 
+                                    {% if experience.is_ongoing %}
+                                        Ongoing
+                                    {% else %}
+                                        {{ experience.ended_at|date:"M Y" }} (Completed)
+                                    {% endif %}
+                                </time>
+                                <span class="timeline-tag">{{ experience.get_category_display }}</span>
+                            </div>
+
+                            <!-- Judul Peran / Role -->
                             <h2 class="timeline-role">{{ experience.title }}</h2>
-                            <p class="timeline-desc">{{ experience.description }}</p>
-                            {% if experience.is_ongoing %}
-                                <p class="timeline-org">Sedang berlangsung</p>
-                            {% else %}
-                                <p class="timeline-org">Selesai</p>
+
+                            <!-- Nama Perusahaan / Kampus / Organisasi -->
+                            {% if experience.company %}
+                                <p class="timeline-org">{{ experience.company }}</p>
                             {% endif %}
-                        </div>
+
+                            <!-- Deskripsi Pengalaman -->
+                            <p class="timeline-desc">{{ experience.description }}</p>
+                        </article>
                     {% empty %}
                         <p class="empty-state">
-                            Belum ada pengalaman yang ditambahkan.
+                            No experiences added yet.
                         </p>
                     {% endfor %}
                 </div>
