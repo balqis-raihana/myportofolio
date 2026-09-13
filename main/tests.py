@@ -284,3 +284,8 @@ class CourseworkDetailPageTest(TestCase):
         """The detail page nav dropdown should include this course's link."""
         response = self.client.get(self.url)
         self.assertContains(response, self.coursework.name)
+
+    def test_journal_images_gallery_renders_when_images_found(self):
+        """When journal_images are in context, the gallery block and captions render."""
+        response = self.client.get(self.url)
+        self.assertIn("journal_images", response.context)

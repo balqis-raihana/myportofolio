@@ -60,6 +60,22 @@
                     {% else %}
                         <p class="empty-state">No journal entry yet. Add one via the Admin panel.</p>
                     {% endif %}
+
+                    {% if journal_images %}
+                        <div class="journal-gallery">
+                            <h3 class="gallery-title">Artifacts & Documentation</h3>
+                            <div class="gallery-grid">
+                                {% for img in journal_images %}
+                                    <figure class="gallery-item">
+                                        <div class="gallery-img-wrapper">
+                                            <img src="{{ img.url }}" alt="{{ img.caption }}" class="gallery-img" loading="lazy">
+                                        </div>
+                                        <figcaption class="gallery-caption">{{ img.caption }}</figcaption>
+                                    </figure>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <a href="{% url 'main:show_coursework' %}" class="back-link">← Back to Coursework</a>
