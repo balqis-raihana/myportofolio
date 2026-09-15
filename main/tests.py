@@ -110,6 +110,16 @@ class ProfilePageTest(TestCase):
         """Dropdown nav on index must list the coursework entry."""
         self.assertContains(self.response, self.coursework.name)
 
+    def test_education_list_renders_dynamically(self):
+        self.assertIn("education_list", self.response.context)
+        self.assertContains(self.response, "Universitas Indonesia")
+        self.assertContains(self.response, "Undergraduate of Information Systems")
+
+    def test_interests_list_renders_dynamically(self):
+        self.assertIn("interests_list", self.response.context)
+        self.assertContains(self.response, "Auditing")
+        self.assertContains(self.response, "Marine Sciences")
+
 
 class NotFoundTest(TestCase):
 
@@ -208,7 +218,7 @@ class CourseworkListPageTest(TestCase):
     def test_empty_state_when_no_coursework(self):
         Coursework.objects.all().delete()
         self.assertContains(self.client.get(self.url),
-                            "Belum ada coursework yang ditambahkan.")
+                            "No coursework added yet.")
 
     def test_nav_links_present(self):
         response = self.client.get(self.url)

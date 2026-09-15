@@ -1,18 +1,73 @@
+import os
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404
+from django.utils.text import slugify
 
 from main.models import Experience, Coursework
 
 
 def show_main(request):
+    education_list = [
+        {
+            "period": "2025 — Present",
+            "institution": "Universitas Indonesia",
+            "degree": "Undergraduate of Information Systems",
+        },
+        {
+            "period": "2022 — 2025",
+            "institution": "SMA Negeri 13 Jakarta",
+            "degree": "High School Diploma",
+        },
+    ]
+
+    interests_list = [
+        {
+            "title": "Auditing",
+            "description": (
+                "As someone who loves administrative work, I am naturally drawn to the world of auditing, "
+                "considering I am an IS student: IT auditing. There is something deeply satisfying about "
+                "ensuring that IT systems are accurate and that organizations are operating efficiently "
+                "and ethically."
+            ),
+        },
+        {
+            "title": "Marine Sciences",
+            "description": (
+                "I'm an island girl at heart, well at least when I'm on vacation. I'm deeply interested in "
+                "marine sciences and hope to contribute to ocean conservation with IS."
+            ),
+        },
+        {
+            "title": "Business",
+            "description": (
+                "Although I realize I am not in business major entirely, I have always been interested "
+                "in the world of business, management, and how technology can be used to improve business "
+                "processes."
+            ),
+        },
+        {
+            "title": "Story-Heavy Games",
+            "description": (
+                "Unrelated to any of my jobs, I really enjoy playing story-heavy games, such as Subnautica, "
+                "Red Dead Redemption 2, and other major AAA games."
+            ),
+        },
+    ]
+
     context = {
         "name": "Balqis Raihana",
         "npm": "2506625981",
         "study_program": "S1 Sistem Informasi",
         "bio": (
-            """I consider myself a multidisciplinary learner who is comfortable working across technical, 
-               analytical, and organizational domains. While I continue to develop expertise in specific 
-               areas, I am driven by curiosity, adaptability, and a desire to keep learning new things."""
+            """A highly flexible generalist who enjoys taking on different kinds of work, especially 
+            roles that involve organizing, coordinating, and solving day-to-day problems. I enjoy being 
+            someone people can come to with questions, which is why I particularly value my experiences 
+            in teaching and administrative roles. Alongside this, I am developing my interest in Data 
+            Science and analytical problem-solving, with the long-term goal of exploring IT Audit at the 
+            intersection of technology, data, processes, and business."""
         ),
+        "education_list": education_list,
+        "interests_list": interests_list,
         "coursework_list": Coursework.objects.all(),
     }
     return render(request, "index.html", context)
@@ -34,10 +89,6 @@ def show_coursework(request):
     }
     return render(request, "coursework.html", context)
 
-
-import os
-from django.conf import settings
-from django.utils.text import slugify
 
 def get_course_journal_images(course):
     coursework_img_dir = os.path.join(settings.BASE_DIR, "static", "img", "coursework")
