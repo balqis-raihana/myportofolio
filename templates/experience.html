@@ -1,88 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block meta %}
     <title>Experience - {{ name }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
+{% endblock meta %}
 
-<body>
-    <header class="site-header">
+{% block content %}
+<main>
+    <section class="experience-section" id="experience">
         <div class="container">
-            <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
-            <nav>
-                <a href="{% url 'main:show_main' %}">Profile</a>
-                <a href="{% url 'main:show_experience' %}">Experience</a>
-                <span class="nav-item">
-                    <a href="{% url 'main:show_coursework' %}">Coursework ▾</a>
-                    <ul class="nav-dropdown">
-                        <li><a href="{% url 'main:show_coursework' %}">All Courses</a></li>
-                        {% for c in coursework_list %}
-                            <li><a href="{% url 'main:show_coursework_detail' c.id %}">{{ c.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </span>
-            </nav>
-        </div>
-    </header>
+            <p class="section-kicker">My journey so far</p>
 
-    <main>
-        <section class="experience-section" id="experience">
-            <div class="container">
-                <p class="section-kicker">My journey so far</p>
+            <div class="project-header">
                 <h1 class="section-title">Experience</h1>
+                <a href="{% url 'main:create_experience' %}" class="button project-add-button">
+                    <span aria-hidden="true">+</span>
+                    Add Experience
+                </a>
+            </div>
 
-                <!-- Container Timeline Vertikal -->
-                <div class="timeline">
-                    {% for experience in experience_list %}
-                        <article class="timeline-item">
-                            <!-- Titik bulat -->
-                            <div class="timeline-marker"></div>
-
-                            <!-- Baris tanggal & status (ongoing / completed) -->
-                            <div class="timeline-meta">
-                                <time class="timeline-date">
-                                    {{ experience.started_at|date:"M Y" }} — 
-                                    {% if experience.is_ongoing %}
-                                        Ongoing
-                                    {% else %}
-                                        {{ experience.ended_at|date:"M Y" }} (Completed)
-                                    {% endif %}
-                                </time>
-                                <span class="timeline-tag">{{ experience.get_category_display }}</span>
-                            </div>
-
-                            <!-- Judul Peran / Role -->
-                            <h2 class="timeline-role">{{ experience.title }}</h2>
-
-                            <!-- Nama Perusahaan / Kampus / Organisasi -->
-                            {% if experience.company %}
-                                <p class="timeline-org">{{ experience.company }}</p>
-                            {% endif %}
-
-                            <!-- Deskripsi Pengalaman -->
-                            <p class="timeline-desc">{{ experience.description }}</p>
-                        </article>
-                    {% empty %}
-                        <p class="empty-state">
-                            No experiences added yet.
-                        </p>
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-success">{{ message }}</div>
                     {% endfor %}
                 </div>
+            {% endif %}
+
+            <form method="get" action="{% url 'main:show_experience' %}" class="project-search">
+                <input type="search"
+                       name="title"
+                       value="{{ title_query }}"
+                       placeholder="Search by role / position"
+                       class="project-search__input"
+                       aria-label="Search by role / position">
+                <button type="submit" class="button">Search</button>
+            </form>
+
+            <!-- Container Timeline Vertikal -->
+            <div class="timeline">
+                {% for experience in experience_list %}
+                    <article class="timeline-item">
+                        <!-- Titik bulat -->
+                        <div class="timeline-marker"></div>
+
+                        <!-- Baris tanggal & status (ongoing / completed) -->
+                        <div class="timeline-meta">
+                            <time class="timeline-date">
+                                {{ experience.started_at|date:"M Y" }} — 
+                                {% if experience.is_ongoing %}
+                                    Ongoing
+                                {% else %}
+                                    {{ experience.ended_at|date:"M Y" }} (Completed)
+                                {% endif %}
+                            </time>
+                            <span class="timeline-tag">{{ experience.get_category_display }}</span>
+                        </div>
+
+                        <!-- Judul Peran / Role -->
+                        <h2 class="timeline-role">{{ experience.title }}</h2>
+
+                        <!-- Nama Perusahaan / Kampus / Organisasi -->
+                        {% if experience.company %}
+                            <p class="timeline-org">{{ experience.company }}</p>
+                        {% endif %}
+
+                        <!-- Deskripsi Pengalaman -->
+                        <p class="timeline-desc">{{ experience.description }}</p>
+
+                        <!-- Delete Modal -->
+                        {% include "components/experience_delete_modal.html" with experience=experience %}
+                    </article>
+                {% empty %}
+                    {% if title_query %}
+                        <p class="empty-state">No experience found with that title.</p>
+                    {% else %}
+                        <p class="empty-state">No experiences added yet.</p>
+                    {% endif %}
+                {% endfor %}
             </div>
-        </section>
-    </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
         </div>
-    </footer>
-</body>
-
-</html>
+    </section>
+</main>
+{% endblock content %}

@@ -1,9 +1,13 @@
 import os
 from django.conf import settings
-from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
+from django.core import serializers
+from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.text import slugify
 
 from main.models import Experience, Coursework
+from main.forms import ExperienceForm
 
 
 def show_main(request):
@@ -74,12 +78,59 @@ def show_main(request):
 
 
 def show_experience(request):
+    json_response = get_experience_json(request)
+    experiences = serializers.deserialize(
+        "json",
+        json_response.content.decode("utf-8"),
+    )
+    experience_list = [item.object for item in experiences]
+    title_query = request.GET.get("title", "").strip()
+
     context = {
         "name": "Balqis Raihana",
-        "experience_list": Experience.objects.all().order_by('-started_at'),
+        "experience_list": experience_list,
+        "title_query": title_query,
         "coursework_list": Coursework.objects.all(),
     }
     return render(request, "experience.html", context)
+
+
+def create_experience(request):
+    form = ExperienceForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "New experience successfully added!")
+        return redirect("main:show_experience")
+
+    context = {
+        "name": "Balqis Raihana",
+        "form": form,
+        "coursework_list": Coursework.objects.all(),
+    }
+    return render(request, "experience_form.html", context)
+
+
+def get_experience_json(request):
+    title_query = request.GET.get("title", "").strip()
+    experiences = Experience.objects.all().order_by("-started_at")
+
+    if title_query:
+        experiences = experiences.filter(title__icontains=title_query)
+
+    experiences_json = serializers.serialize("json", experiences)
+    return HttpResponse(experiences_json, content_type="application/json")
+
+
+def delete_experience(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+
+    if request.method == "POST":
+        experience.delete()
+        messages.success(request, "Experience successfully deleted!")
+        return redirect("main:show_experience")
+
+    return redirect("main:show_experience")
 
 
 def show_coursework(request):

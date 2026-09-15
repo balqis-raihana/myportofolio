@@ -181,6 +181,44 @@ class ExperiencePageTest(TestCase):
         cw = make_coursework()
         self.assertContains(self.client.get(self.url), cw.name)
 
+    def test_search_experience_by_title(self):
+        exp2 = make_experience(title="Frontend Developer")
+        response = self.client.get(self.url + "?title=Asisten")
+        self.assertContains(response, self.experience.title)
+        self.assertNotContains(response, "Frontend Developer")
+
+    def test_create_experience_get(self):
+        add_url = reverse("main:create_experience")
+        response = self.client.get(add_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "experience_form.html")
+
+    def test_create_experience_post_success(self):
+        add_url = reverse("main:create_experience")
+        data = {
+            "title": "Software Engineer Intern",
+            "company": "Tech Corp",
+            "description": "Building backend microservices.",
+            "category": "internship",
+            "started_at": "2026-01-01T09:00",
+        }
+        response = self.client.post(add_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Experience.objects.filter(title="Software Engineer Intern").exists())
+
+    def test_delete_experience_post(self):
+        delete_url = reverse("main:delete_experience", args=[self.experience.id])
+        response = self.client.post(delete_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Experience.objects.filter(id=self.experience.id).exists())
+
+    def test_get_experience_json(self):
+        json_url = reverse("main:get_experience_json")
+        response = self.client.get(json_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn(self.experience.title, response.content.decode("utf-8"))
+
 
 # ===========================================================================
 # 4.  COURSEWORK LIST PAGE TESTS
