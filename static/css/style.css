@@ -9,28 +9,89 @@
 }
 
 :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --ink: #e8e8e8;
-    --accent: #00e5ff;
-    --accent-dim: #00a3b8;
-    --line: #2a2a2a;
-    --text-muted: #8a8a8a;
-    --neon-yellow: #fff01f;
-    --radius: 4px;
+    --bg: #05080c;
+    --abyss-deep: #03060a;
+    --abyss-navy: #09131d;
+    --surface: #0e1722;
+    --surface-elevated: #132030;
+    --ink: #e6f1f8;
+    --accent: #00f0ff;
+    --accent-dim: #009eb0;
+    --accent-glow: rgba(0, 240, 255, 0.4);
+    --line: #1c2c3d;
+    --line-glow: rgba(0, 240, 255, 0.18);
+    --text-muted: #8ca3b8;
+    --neon-yellow: #f8e71c;
+    --neon-yellow-glow: rgba(248, 231, 28, 0.45);
+    --radius: 6px;
+    --radius-pill: 9999px;
+    --font-display: "Syne", "Space Grotesk", sans-serif;
+    --font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+
+/* ==========================================================================
+   BACKGROUND ATMOSPHERE (Cyberpunk Sky x Oceanic Abyss)
+   ========================================================================== */
+
+body {
+    background-color: var(--bg);
+    background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.12), transparent 70%),
+        linear-gradient(180deg, #060c14 0%, #03060a 100%);
+    font-family: var(--font-sans);
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Subtle holographic grid / abyss mesh layer */
+.abyss-mesh {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-size: 40px 40px;
+    background-image: 
+        linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    z-index: 0;
+    mask-image: radial-gradient(circle at 50% 30%, black 40%, transparent 85%);
+    -webkit-mask-image: radial-gradient(circle at 50% 30%, black 40%, transparent 85%);
+}
+
+/* Breathing bioluminescent ambient glow behind sections */
+.ambient-glow {
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 650px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.07) 0%, rgba(248, 231, 28, 0.03) 40%, transparent 75%);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: abyssBreathe 10s ease-in-out infinite alternate;
+}
+
+@keyframes abyssBreathe {
+    0% {
+        opacity: 0.5;
+        transform: translateX(-50%) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.1);
+    }
 }
 
 
 /* ==========================================================================
    TYPOGRAPHY & BASE LAYOUT
    ========================================================================== */
-
-body {
-    background-color: var(--bg);
-    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: var(--ink);
-    line-height: 1.6;
-}
 
 h1, h3, .brand {
     font-family: "Space Grotesk", -apple-system, sans-serif;
@@ -45,31 +106,47 @@ h2 {
     max-width: 960px;
     margin: 0 auto;
     padding: 0 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 
 section {
-    padding: 4rem 0;
+    padding: 4.5rem 0;
+    position: relative;
+    z-index: 1;
 }
 
 .section-title {
-    font-family: "Space Grotesk", -apple-system, sans-serif;
-    font-size: 1.8rem;
+    font-family: var(--font-display);
+    font-size: 2.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     margin-bottom: 1.5rem;
 }
 
 .section-kicker {
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-dim);
+    color: var(--accent);
     font-weight: 700;
     margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.section-kicker::before {
+    content: "//";
+    color: var(--neon-yellow);
 }
 
 .empty-state {
     color: var(--text-muted);
-    font-size: 1rem;
-    padding: 2rem 0;
+    font-size: 0.95rem;
+    padding: 2.5rem 0;
+    font-family: var(--font-mono);
 }
 
 
@@ -82,32 +159,43 @@ section {
     top: 0;
     z-index: 1000;
     border-bottom: 1px solid var(--line);
-    background-color: var(--bg);
-    opacity: 0.8;
+    background-color: rgba(5, 8, 12, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: border-color 0.3s ease;
+}
+
+.site-header:hover {
+    border-bottom-color: var(--line-glow);
 }
 
 .site-header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1.5rem;
+    padding: 0.85rem 1.5rem;
 }
 
 .brand {
-    font-size: 1.3rem;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--neon-yellow);
     text-decoration: none;
-    transition: opacity 0.2s ease;
+    letter-spacing: -0.01em;
+    position: relative;
+    transition: all 0.25s ease;
+    text-shadow: 0 0 16px rgba(248, 231, 28, 0.2);
 }
 
 .brand:hover {
-    opacity: 0.7;
+    color: #fff;
+    text-shadow: 0 0 20px var(--neon-yellow-glow);
 }
 
 .site-header nav {
     display: flex;
-    gap: 2rem;
+    gap: 0.85rem;
     align-items: center;
 }
 
@@ -115,23 +203,53 @@ section {
     display: inline-block;
     color: var(--ink);
     text-decoration: none;
-    font-size: 0.95rem;
-    padding: 0.4rem 0.1rem;
-    transition: color 0.2s ease;
-}
-
-.site-header nav a:hover {
-    color: var(--surface);
-    background-color: var(--neon-yellow);
+    font-size: 0.92rem;
+    font-family: var(--font-mono);
+    padding: 0.4rem 0.75rem;
     border-radius: var(--radius);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
-/* ==========================================================================
-   Dropdown 
-   ==========================================================================*/
+.site-header nav a:hover,
+.site-header nav .nav-item.is-open > .nav-dropdown-toggle {
+    color: var(--accent);
+    background-color: rgba(0, 240, 255, 0.08);
+    border-color: rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+}
+
+.site-header nav a.active {
+    color: var(--accent);
+    background-color: rgba(0, 240, 255, 0.08);
+    border-color: rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.2), inset 0 -2px 0 var(--accent);
+}
+
+/* Dropdown */
 .nav-item {
-    display: inline-block;
     position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-item .nav-dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.nav-item .dropdown-arrow {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+.nav-item:hover .dropdown-arrow,
+.nav-item.is-open .dropdown-arrow {
+    transform: rotate(180deg);
 }
 
 .nav-item .nav-dropdown {
@@ -139,33 +257,75 @@ section {
     position: absolute;
     top: 100%;
     left: 0;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    min-width: 150px;
+    background: var(--surface);
+    border: 1px solid var(--line-glow);
+    border-radius: var(--radius);
+    min-width: 200px;
     z-index: 2000;
     list-style: none;
-    padding: 0.25rem 0;
+    padding: 0.4rem 0;
+    margin-top: 0.25rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 240, 255, 0.15);
+    animation: dropdownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.nav-item:hover .nav-dropdown {
+/* Invisible bridge so cursor never falls through a gap when moving from trigger to menu */
+.nav-item .nav-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    height: 14px;
+    background: transparent;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Display dropdown on hover, keyboard focus, or via toggle class */
+.nav-item:hover .nav-dropdown,
+.nav-item:focus-within .nav-dropdown,
+.nav-item.is-open .nav-dropdown {
     display: block;
+}
+
+.nav-dropdown li {
+    list-style: none;
 }
 
 .nav-dropdown a {
     display: block;
-    padding: 0.4rem 0.8rem;
+    padding: 0.55rem 1.1rem;
     color: var(--ink);
     text-decoration: none;
+    font-size: 0.86rem;
+    font-family: var(--font-mono);
+    transition: all 0.15s ease;
+    border: none;
+    border-radius: 0;
 }
 
 .nav-dropdown a:hover {
-    background-color: var(--surface);
+    background-color: var(--surface-elevated);
     color: var(--neon-yellow);
+    padding-left: 1.35rem;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 
 /* ==========================================================================
    HERO
+
    ========================================================================== */
 
 .hero {
@@ -308,7 +468,9 @@ section {
 
 .education-timeline .timeline-marker {
     background-color: var(--neon-yellow);
-    box-shadow: 0 0 8px rgba(255, 240, 31, 0.6);
+    border: 2px solid var(--bg);
+    box-shadow: none;
+    animation: none;
 }
 
 .education-timeline .timeline-item {
@@ -323,7 +485,7 @@ section {
 .education-timeline .timeline-item:hover {
     transform: translateX(4px);
     border-color: var(--neon-yellow);
-    box-shadow: 0 4px 18px rgba(255, 240, 31, 0.15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 
@@ -367,12 +529,12 @@ section {
 .interest-item:hover {
     transform: translateY(-4px);
     border-color: var(--accent);
-    box-shadow: 0 6px 20px rgba(0, 229, 255, 0.18);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .interest-item:nth-child(even):hover {
     border-color: var(--neon-yellow);
-    box-shadow: 0 6px 20px rgba(255, 240, 31, 0.18);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .interest-item h3 {
@@ -421,12 +583,13 @@ section {
     position: absolute;
     left: -2rem;
     top: 6px;
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     background-color: var(--accent);
-    border: 2px solid var(--ink);
-    box-shadow: 0 0 0 2px var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent), 0 0 10px var(--accent);
+    z-index: 10;
 }
 
 .timeline-meta {
@@ -506,7 +669,7 @@ section {
 .course-card:hover {
     border-color: var(--accent);
     transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 229, 255, 0.12);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .course-tag {
@@ -858,9 +1021,33 @@ section {
 }
 
 .experience-card-actions {
-    margin-top: 0.85rem;
+    margin-top: 1rem;
     display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.experience-card-actions .button {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    line-height: 1.35;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+}
+
+.experience-card-actions .button-secondary {
+    background: rgba(14, 23, 34, 0.85);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
+.experience-card-actions .button-secondary:hover {
+    background: var(--surface-elevated);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .alert-success {
@@ -946,6 +1133,117 @@ section {
 
 
 /* ==========================================================================
+   ANIMATIONS & MICRO-INTERACTIONS (Cyberpunk x Oceanic Abyss)
+   ========================================================================== */
+
+/* Page & Section Entrance */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero {
+    animation: fadeInUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.education {
+    animation: fadeInUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.interests {
+    animation: fadeInUp 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Photo block floating bioluminescent wave */
+@keyframes abyssFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.35));
+    }
+    50% {
+        transform: translateY(-8px) rotate(2deg);
+        filter: drop-shadow(0 0 26px rgba(0, 240, 255, 0.55));
+    }
+}
+
+.hero-photo {
+    animation: abyssFloat 6s ease-in-out infinite;
+}
+
+/* Card Zap animation on hover */
+.interest-item, .course-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.interest-item::after, .course-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -130%;
+    width: 65%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.16), transparent);
+    transform: skewX(-25deg);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+.interest-item:nth-child(even)::after {
+    background: linear-gradient(90deg, transparent, rgba(248, 231, 28, 0.16), transparent);
+}
+
+.interest-item:hover::after, .course-card:hover::after {
+    left: 170%;
+}
+
+/* Timeline glowing node pulse */
+.timeline-marker {
+    animation: markerPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes markerPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px var(--accent), 0 0 10px rgba(0, 240, 255, 0.5);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 4px var(--accent), 0 0 18px rgba(0, 240, 255, 0.85);
+        transform: scale(1.12);
+    }
+}
+
+/* Coursework Card Card Border Hover */
+.course-card {
+    background: linear-gradient(165deg, var(--surface) 0%, rgba(14, 23, 34, 0.7) 100%);
+    border: 1px solid var(--line);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.course-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Terminal Kicker Hover Glitch Accent */
+.section-kicker {
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.section-kicker:hover {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow-glow);
+}
+
+
+/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 
@@ -1004,4 +1302,173 @@ section {
         text-align: center;
     }
 }
+
+
+/* ==========================================================================
+   CATEGORY FILTER PILLS
+   ========================================================================== */
+
+.category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: rgba(14, 23, 34, 0.6);
+    border: 1px solid var(--line);
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filter-pill:hover {
+    color: var(--ink);
+    border-color: var(--line-glow);
+    background: var(--surface-elevated);
+    transform: translateY(-1px);
+}
+
+.filter-pill.active {
+    color: #03060a;
+    background: var(--accent);
+    border-color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.45);
+}
+
+
+/* ==========================================================================
+   FLOATING BACK TO TOP
+   ========================================================================== */
+
+.back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(14, 23, 34, 0.85);
+    border: 1px solid var(--line-glow);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--accent);
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 900;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.back-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.back-to-top:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+    transform: translateY(-3px);
+}
+
+
+/* ==========================================================================
+   TOAST FLASH NOTIFICATIONS
+   ========================================================================== */
+
+.toast-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.toast-card {
+    pointer-events: auto;
+    min-width: 280px;
+    max-width: 400px;
+    background: rgba(14, 23, 34, 0.94);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 0.85rem 1.1rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 240, 255, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: all 0.3s ease;
+}
+
+.toast-card.is-fading {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.toast-icon {
+    color: var(--accent);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.toast-close:hover {
+    color: #fff;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+
+
+
+
 

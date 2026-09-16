@@ -1,94 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ course.name }} – Coursework – {{ name }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
+{% block meta %}
+<title>{{ course.name }} – Coursework – {{ name }}</title>
+{% endblock meta %}
 
-<body>
-    <header class="site-header">
+{% block content %}
+<main class="fade-in">
+    <section class="coursework-detail-section" id="coursework-detail">
         <div class="container">
-            <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
-            <nav>
-                <a href="{% url 'main:show_main' %}">Profile</a>
-                <a href="{% url 'main:show_experience' %}">Experience</a>
-                <span class="nav-item">
-                    <a href="{% url 'main:show_coursework' %}">Coursework ▾</a>
-                    <ul class="nav-dropdown">
-                        <li><a href="{% url 'main:show_coursework' %}">All Courses</a></li>
-                        {% for c in coursework_list %}
-                            <li><a href="{% url 'main:show_coursework_detail' c.id %}">{{ c.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </span>
+
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'main:show_main' %}">Home</a>
+                <span class="breadcrumb-sep">›</span>
+                <a href="{% url 'main:show_coursework' %}">Coursework</a>
+                <span class="breadcrumb-sep">›</span>
+                <span>{{ course.name }}</span>
             </nav>
-        </div>
-    </header>
 
-    <main class="fade-in">
-        <section class="coursework-detail-section" id="coursework-detail">
-            <div class="container">
+            <p class="section-kicker">Course Detail</p>
+            <h1 class="section-title">{{ course.name }}</h1>
+            <span class="course-tag">{{ course.category }}</span>
 
-                <nav class="breadcrumb" aria-label="Breadcrumb">
-                    <a href="{% url 'main:show_main' %}">Home</a>
-                    <span class="breadcrumb-sep">›</span>
-                    <a href="{% url 'main:show_coursework' %}">Coursework</a>
-                    <span class="breadcrumb-sep">›</span>
-                    <span>{{ course.name }}</span>
-                </nav>
-
-                <p class="section-kicker">Course Detail</p>
-                <h1 class="section-title">{{ course.name }}</h1>
-                <span class="course-tag">{{ course.category }}</span>
-
-                <div class="course-detail-meta">
-                    <span class="course-credits">{{ course.credits }} Credits</span>
-                </div>
-
-                <p class="course-desc detail-desc">{{ course.description }}</p>
-
-                <div class="journal-section">
-                    <h2 class="journal-title">Journal — What I Did</h2>
-                    {% if course.journal %}
-                        <div class="journal-body">{{ course.journal|linebreaksbr }}</div>
-                    {% else %}
-                        <p class="empty-state">No journal entry yet. Add one via the Admin panel.</p>
-                    {% endif %}
-
-                    {% if journal_images %}
-                        <div class="journal-gallery">
-                            <h3 class="gallery-title">Artifacts & Documentation</h3>
-                            <div class="gallery-grid">
-                                {% for img in journal_images %}
-                                    <figure class="gallery-item">
-                                        <div class="gallery-img-wrapper">
-                                            <img src="{{ img.url }}" alt="{{ img.caption }}" class="gallery-img" loading="lazy">
-                                        </div>
-                                        <figcaption class="gallery-caption">{{ img.caption }}</figcaption>
-                                    </figure>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <a href="{% url 'main:show_coursework' %}" class="back-link">← Back to Coursework</a>
-
+            <div class="course-detail-meta">
+                <span class="course-credits">{{ course.credits }} Credits</span>
             </div>
-        </section>
-    </main>
 
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+            <p class="course-desc detail-desc">{{ course.description }}</p>
+
+            <div class="journal-section">
+                <h2 class="journal-title">Journal — What I Did</h2>
+                {% if course.journal %}
+                    <div class="journal-body">{{ course.journal|linebreaksbr }}</div>
+                {% else %}
+                    <p class="empty-state">No journal entry yet. Add one via the Admin panel.</p>
+                {% endif %}
+
+                {% if journal_images %}
+                    <div class="journal-gallery">
+                        <h3 class="gallery-title">Artifacts & Documentation</h3>
+                        <div class="gallery-grid">
+                            {% for img in journal_images %}
+                                <figure class="gallery-item">
+                                    <div class="gallery-img-wrapper">
+                                        <img src="{{ img.url }}" alt="{{ img.caption }}" class="gallery-img" loading="lazy">
+                                    </div>
+                                    <figcaption class="gallery-caption">{{ img.caption }}</figcaption>
+                                </figure>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <a href="{% url 'main:show_coursework' %}" class="back-link">← Back to Coursework</a>
+
         </div>
-    </footer>
-</body>
-
-</html>
+    </section>
+</main>
+{% endblock content %}

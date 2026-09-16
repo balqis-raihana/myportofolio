@@ -26,7 +26,34 @@
                 </div>
             {% endif %}
 
+            <!-- Category Filter Pills -->
+            <div class="category-filters" role="group" aria-label="Filter experiences by category">
+                <a href="{% url 'main:show_experience' %}{% if title_query %}?title={{ title_query }}{% endif %}"
+                   class="filter-pill {% if not category_query or category_query == 'all' %}active{% endif %}">
+                    All
+                </a>
+                <a href="{% url 'main:show_experience' %}?category=internship{% if title_query %}&title={{ title_query }}{% endif %}"
+                   class="filter-pill {% if category_query == 'internship' %}active{% endif %}">
+                    Internship
+                </a>
+                <a href="{% url 'main:show_experience' %}?category=part-time{% if title_query %}&title={{ title_query }}{% endif %}"
+                   class="filter-pill {% if category_query == 'part-time' %}active{% endif %}">
+                    Part-time
+                </a>
+                <a href="{% url 'main:show_experience' %}?category=organizational{% if title_query %}&title={{ title_query }}{% endif %}"
+                   class="filter-pill {% if category_query == 'organizational' %}active{% endif %}">
+                    Organizational
+                </a>
+                <a href="{% url 'main:show_experience' %}?category=full-time{% if title_query %}&title={{ title_query }}{% endif %}"
+                   class="filter-pill {% if category_query == 'full-time' %}active{% endif %}">
+                    Full-time
+                </a>
+            </div>
+
             <form method="get" action="{% url 'main:show_experience' %}" class="project-search">
+                {% if category_query %}
+                    <input type="hidden" name="category" value="{{ category_query }}">
+                {% endif %}
                 <input type="search"
                        name="title"
                        value="{{ title_query }}"
@@ -34,6 +61,9 @@
                        class="project-search__input"
                        aria-label="Search by role / position">
                 <button type="submit" class="button">Search</button>
+                {% if title_query or category_query %}
+                    <a href="{% url 'main:show_experience' %}" class="button button-secondary" title="Clear all filters">Reset</a>
+                {% endif %}
             </form>
 
             <!-- Container Timeline Vertikal -->

@@ -219,6 +219,34 @@ class ExperiencePageTest(TestCase):
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertIn(self.experience.title, response.content.decode("utf-8"))
 
+    def test_edit_experience_get(self):
+        edit_url = reverse("main:edit_experience", args=[self.experience.id])
+        response = self.client.get(edit_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "experience_form.html")
+        self.assertContains(response, self.experience.title)
+
+    def test_edit_experience_post_success(self):
+        edit_url = reverse("main:edit_experience", args=[self.experience.id])
+        data = {
+            "title": "Lead Assistant Lecturer",
+            "company": "Fasilkom UI",
+            "description": "Leading labs and lectures.",
+            "category": "part-time",
+            "started_at": "2026-02-01T08:00",
+        }
+        response = self.client.post(edit_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.experience.refresh_from_db()
+        self.assertEqual(self.experience.title, "Lead Assistant Lecturer")
+        self.assertEqual(self.experience.company, "Fasilkom UI")
+
+    def test_filter_experience_by_category(self):
+        make_experience(title="Startup Intern", category="internship")
+        response = self.client.get(self.url + "?category=internship")
+        self.assertContains(response, "Startup Intern")
+        self.assertNotContains(response, "Asisten Dosen PBP")
+
 
 # ===========================================================================
 # 4.  COURSEWORK LIST PAGE TESTS

@@ -85,11 +85,13 @@ def show_experience(request):
     )
     experience_list = [item.object for item in experiences]
     title_query = request.GET.get("title", "").strip()
+    category_query = request.GET.get("category", "").strip().lower()
 
     context = {
         "name": "Balqis Raihana",
         "experience_list": experience_list,
         "title_query": title_query,
+        "category_query": category_query,
         "coursework_list": Coursework.objects.all(),
     }
     return render(request, "experience.html", context)
@@ -111,12 +113,34 @@ def create_experience(request):
     return render(request, "experience_form.html", context)
 
 
+def edit_experience(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+    form = ExperienceForm(request.POST or None, instance=experience)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Experience successfully updated!")
+        return redirect("main:show_experience")
+
+    context = {
+        "name": "Balqis Raihana",
+        "form": form,
+        "experience": experience,
+        "is_edit": True,
+        "coursework_list": Coursework.objects.all(),
+    }
+    return render(request, "experience_form.html", context)
+
+
 def get_experience_json(request):
     title_query = request.GET.get("title", "").strip()
+    category_query = request.GET.get("category", "").strip().lower()
     experiences = Experience.objects.all().order_by("-started_at")
 
     if title_query:
         experiences = experiences.filter(title__icontains=title_query)
+    if category_query and category_query != "all":
+        experiences = experiences.filter(category=category_query)
 
     experiences_json = serializers.serialize("json", experiences)
     return HttpResponse(experiences_json, content_type="application/json")

@@ -4,23 +4,42 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/png" href="/static/img/qis.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/static/css/style.css">
         {% block meta %} {% endblock meta %}
     </head>
         
     <body>
+        <div class="ambient-glow"></div>
+        <div class="abyss-mesh"></div>
+
+        <!-- Floating Toast Notifications -->
+        {% if messages %}
+            <div class="toast-container" id="toastContainer" role="region" aria-live="polite">
+                {% for message in messages %}
+                    <div class="toast-card {% if message.tags %}toast-{{ message.tags }}{% endif %}">
+                        <span class="toast-icon">&#10003;</span>
+                        <div class="toast-content">{{ message }}</div>
+                        <button type="button" class="toast-close" aria-label="Close notification">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <header class="site-header">
             <div class="container">
                 <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
                 <nav>
-                    <a href="{% url 'main:show_main' %}">Profile</a>
-                    <a href="{% url 'main:show_experience' %}">Experience</a>
+                    <a href="{% url 'main:show_main' %}" class="{% if request.resolver_match.url_name == 'show_main' %}active{% endif %}">Profile</a>
+                    <a href="{% url 'main:show_experience' %}" class="{% if 'experience' in request.path %}active{% endif %}">Experience</a>
                     <span class="nav-item">
-                        <a href="{% url 'main:show_coursework' %}">Coursework ▾</a>
-                        <ul class="nav-dropdown">
+                        <a href="{% url 'main:show_coursework' %}" class="nav-dropdown-toggle {% if 'coursework' in request.path %}active{% endif %}" id="courseworkDropdownToggle" aria-haspopup="true" aria-expanded="false">
+                            Coursework <span class="dropdown-arrow">&#9662;</span>
+                        </a>
+                        <ul class="nav-dropdown" aria-labelledby="courseworkDropdownToggle">
                             <li><a href="{% url 'main:show_coursework' %}">All Courses</a></li>
                             {% for c in coursework_list %}
                                 <li><a href="{% url 'main:show_coursework_detail' c.id %}">{{ c.name }}</a></li>
@@ -34,10 +53,84 @@
         {% block content %}
         {% endblock content %}
 
+        <!-- Floating Back To Top -->
+        <button id="backToTop" class="back-to-top" aria-label="Back to top of page" title="Back to top">
+            <span aria-hidden="true">&#8593;</span>
+        </button>
+
         <footer class="site-footer">
             <div class="container">
                 <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
             </div>
         </footer>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // 1. Coursework Dropdown
+                const navItem = document.querySelector('.nav-item');
+                if (navItem) {
+                    const toggleBtn = navItem.querySelector('.nav-dropdown-toggle');
+                    const dropdown = navItem.querySelector('.nav-dropdown');
+
+                    if (toggleBtn) {
+                        toggleBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const isOpen = navItem.classList.toggle('is-open');
+                            toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                        });
+                    }
+
+                    document.addEventListener('click', (e) => {
+                        if (!navItem.contains(e.target)) {
+                            navItem.classList.remove('is-open');
+                            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    if (dropdown) {
+                        dropdown.querySelectorAll('a').forEach((link) => {
+                            link.addEventListener('click', () => {
+                                navItem.classList.remove('is-open');
+                                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                            });
+                        });
+                    }
+                }
+
+                // 2. Floating Back to Top
+                const backToTopBtn = document.getElementById('backToTop');
+                if (backToTopBtn) {
+                    window.addEventListener('scroll', () => {
+                        if (window.scrollY > 280) {
+                            backToTopBtn.classList.add('is-visible');
+                        } else {
+                            backToTopBtn.classList.remove('is-visible');
+                        }
+                    }, { passive: true });
+
+                    backToTopBtn.addEventListener('click', () => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+
+                // 4. Toast Notifications Auto-Dismiss
+                const toastContainer = document.getElementById('toastContainer');
+                if (toastContainer) {
+                    const toasts = toastContainer.querySelectorAll('.toast-card');
+                    toasts.forEach((toast) => {
+                        const closeBtn = toast.querySelector('.toast-close');
+                        const dismissToast = () => {
+                            toast.classList.add('is-fading');
+                            setTimeout(() => toast.remove(), 350);
+                        };
+
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', dismissToast);
+                        }
+                        setTimeout(dismissToast, 4500);
+                    });
+                }
+            });
+        </script>
     </body>
 </html>
