@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.text import slugify
 
 from main.models import Experience, Coursework
-from main.forms import ExperienceForm
+from main.forms import ExperienceForm, CourseworkForm
 
 
 def show_main(request):
@@ -157,12 +157,78 @@ def delete_experience(request, experience_id):
     return redirect("main:show_experience")
 
 
+def get_coursework_json(request):
+    category_query = request.GET.get("category", "").strip()
+    coursework = Coursework.objects.all()
+
+    if category_query and category_query != "all":
+        coursework = coursework.filter(category__icontains=category_query)
+
+    coursework_json = serializers.serialize("json", coursework)
+    return HttpResponse(coursework_json, content_type="application/json")
+
+
 def show_coursework(request):
+    json_response = get_coursework_json(request)
+    coursework_deserialized = serializers.deserialize(
+        "json",
+        json_response.content.decode("utf-8"),
+    )
+    coursework_list = [item.object for item in coursework_deserialized]
+    category_query = request.GET.get("category", "").strip()
+
     context = {
         "name": "Balqis Raihana",
-        "coursework_list": Coursework.objects.all(),
+        "coursework_list": coursework_list,
+        "category_query": category_query,
     }
     return render(request, "coursework.html", context)
+
+
+def create_coursework(request):
+    form = CourseworkForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "New coursework successfully added!")
+        return redirect("main:show_coursework")
+
+    context = {
+        "name": "Balqis Raihana",
+        "form": form,
+        "coursework_list": Coursework.objects.all(),
+    }
+    return render(request, "coursework_form.html", context)
+
+
+def edit_coursework(request, coursework_id):
+    coursework = get_object_or_404(Coursework, pk=coursework_id)
+    form = CourseworkForm(request.POST or None, instance=coursework)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Coursework successfully updated!")
+        return redirect("main:show_coursework")
+
+    context = {
+        "name": "Balqis Raihana",
+        "form": form,
+        "coursework": coursework,
+        "is_edit": True,
+        "coursework_list": Coursework.objects.all(),
+    }
+    return render(request, "coursework_form.html", context)
+
+
+def delete_coursework(request, coursework_id):
+    coursework = get_object_or_404(Coursework, pk=coursework_id)
+
+    if request.method == "POST":
+        coursework.delete()
+        messages.success(request, "Coursework successfully deleted!")
+        return redirect("main:show_coursework")
+
+    return redirect("main:show_coursework")
 
 
 def get_course_journal_images(course):

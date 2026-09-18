@@ -1,0 +1,50 @@
+<div class="course-detail-actions">
+    <a href="{% url 'main:edit_coursework' course.id %}"
+       class="button button-secondary"
+       aria-label="Edit {{ course.name }}"
+       title="Edit coursework">
+        Edit
+    </a>
+    <button type="button"
+            class="button button-danger"
+            popovertarget="delete-cw-{{ course.id }}"
+            aria-label="Delete {{ course.name }}"
+            title="Delete coursework">
+        Delete
+    </button>
+</div>
+
+<div id="delete-cw-{{ course.id }}"
+     class="project-delete-modal"
+     popover="auto"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="delete-cw-title-{{ course.id }}">
+    <button type="button"
+            class="project-delete-modal__backdrop"
+            popovertarget="delete-cw-{{ course.id }}"
+            popovertargetaction="hide"
+            aria-label="Close delete confirmation"></button>
+    <div class="project-delete-modal__content">
+        <button type="button"
+                class="project-delete-modal__close"
+                popovertarget="delete-cw-{{ course.id }}"
+                popovertargetaction="hide"
+                aria-label="Close delete confirmation">×</button>
+        <h2 id="delete-cw-title-{{ course.id }}">Delete Coursework?</h2>
+        <p>
+            Are you sure you want to delete
+            <strong>{{ course.name }}</strong> ({{ course.category }})?
+        </p>
+        <div class="project-delete-modal__actions">
+            <button type="button"
+                    class="button button-secondary"
+                    popovertarget="delete-cw-{{ course.id }}"
+                    popovertargetaction="hide">Cancel</button>
+            <form method="post" action="{% url 'main:delete_coursework' course.id %}">
+                {% csrf_token %}
+                <button type="submit" class="button button-danger">Yes, Delete</button>
+            </form>
+        </div>
+    </div>
+</div>

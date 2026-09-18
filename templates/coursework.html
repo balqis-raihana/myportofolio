@@ -8,8 +8,24 @@
 <main>
     <section class="coursework" id="coursework">
         <div class="container">
-            <p class="section-kicker">Academic Focus</p>
-            <h1 class="section-title">Relevant Coursework</h1>
+            <div class="project-header">
+                <div>
+                    <p class="section-kicker">Academic Focus</p>
+                    <h1 class="section-title">Relevant Coursework</h1>
+                </div>
+                <a href="{% url 'main:create_coursework' %}" class="button project-add-button">
+                    <span aria-hidden="true">+</span>
+                    Add Coursework
+                </a>
+            </div>
+
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
             <div class="coursework-grid">
                 {% for course in coursework_list %}

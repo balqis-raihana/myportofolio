@@ -1,5 +1,5 @@
-from django.forms import ModelForm, TextInput, Textarea, Select, DateTimeInput, URLInput
-from main.models import Experience
+from django.forms import ModelForm, TextInput, Textarea, Select, URLInput, NumberInput
+from main.models import Experience, Coursework
 
 class ExperienceForm(ModelForm):
     class Meta:
@@ -10,8 +10,6 @@ class ExperienceForm(ModelForm):
             "description",
             "category",
             "thumbnail",
-            "started_at",
-            "ended_at",
         ]
 
         labels = {
@@ -20,8 +18,6 @@ class ExperienceForm(ModelForm):
             "description": "Description",
             "category": "Category",
             "thumbnail": "Thumbnail URL (Optional)",
-            "started_at": "Start Date",
-            "ended_at": "End Date (Leave blank if ongoing)",
         }
 
         widgets = {
@@ -49,14 +45,58 @@ class ExperienceForm(ModelForm):
                     "placeholder": "https://... or leave blank",
                 }
             ),
-            "started_at": DateTimeInput(
+        }
+
+
+class CourseworkForm(ModelForm):
+    class Meta:
+        model = Coursework
+        fields = [
+            "name",
+            "category",
+            "description",
+            "credits",
+            "journal",
+        ]
+
+        labels = {
+            "name": "Course Name",
+            "category": "Category / Stream",
+            "description": "Description",
+            "credits": "Credits (SKS)",
+            "journal": "Learning Journal (Optional)",
+        }
+
+        widgets = {
+            "name": TextInput(
                 attrs={
-                    "type": "datetime-local",
+                    "placeholder": "e.g. Business Management / Pemrograman Berbasis Platform",
+                    "maxlength": 255,
                 }
             ),
-            "ended_at": DateTimeInput(
+            "category": TextInput(
                 attrs={
-                    "type": "datetime-local",
+                    "placeholder": "e.g. Management & Strategy / Software Engineering",
+                    "maxlength": 100,
+                }
+            ),
+            "description": Textarea(
+                attrs={
+                    "placeholder": "Describe what you learn and study in this course...",
+                    "rows": 3,
+                }
+            ),
+            "credits": NumberInput(
+                attrs={
+                    "min": 1,
+                    "max": 12,
+                    "placeholder": "3",
+                }
+            ),
+            "journal": Textarea(
+                attrs={
+                    "placeholder": "Weekly reflections, artifacts, or project summaries...",
+                    "rows": 4,
                 }
             ),
         }

@@ -1020,15 +1020,30 @@ section {
     box-shadow: 0 0 10px rgba(180, 35, 24, 0.4);
 }
 
-.experience-card-actions {
-    margin-top: 1rem;
-    display: flex;
+.experience-card-actions,
+.course-card-actions,
+.course-detail-actions {
+    display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
-.experience-card-actions .button {
+.experience-card-actions,
+.course-card-actions {
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+
+.experience-card-actions .button,
+.experience-card-actions a.button,
+.experience-card-actions button.button,
+.course-card-actions .button,
+.course-card-actions a.button,
+.course-card-actions button.button,
+.course-detail-actions .button,
+.course-detail-actions a.button,
+.course-detail-actions button.button {
     font-size: 0.8rem;
     padding: 0.35rem 0.75rem;
     line-height: 1.35;
@@ -1036,18 +1051,63 @@ section {
     align-items: center;
     justify-content: center;
     height: auto;
+    width: auto;
+    box-sizing: border-box;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
-.experience-card-actions .button-secondary {
+.experience-card-actions .button-secondary,
+.course-card-actions .button-secondary,
+.course-detail-actions .button-secondary {
     background: rgba(14, 23, 34, 0.85);
     color: var(--ink);
     border: 1px solid var(--line);
 }
 
-.experience-card-actions .button-secondary:hover {
+.experience-card-actions .button-secondary:hover,
+.course-card-actions .button-secondary:hover,
+.course-detail-actions .button-secondary:hover {
     background: var(--surface-elevated);
     border-color: var(--accent);
     color: var(--accent);
+}
+
+
+
+.course-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.course-credits-badge {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.12rem 0.5rem;
+}
+
+.course-name-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.course-name-link:hover {
+    color: var(--accent);
+}
+
+.course-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
 }
 
 .alert-success {

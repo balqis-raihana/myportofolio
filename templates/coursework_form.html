@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block meta %}
+    <title>{% if is_edit %}Edit Coursework{% else %}Add Coursework{% endif %} - {{ name }}</title>
+{% endblock meta %}
+
+{% block content %}
+<main>
+    <section class="coursework-section">
+        <div class="container">
+            <p class="section-kicker">Academic Focus</p>
+            <h1 class="section-title">{% if is_edit %}Edit Coursework{% else %}Add New Coursework{% endif %}</h1>
+
+            <form method="post" action="{% if is_edit %}{% url 'main:edit_coursework' coursework.id %}{% else %}{% url 'main:create_coursework' %}{% endif %}" class="project-form">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <p class="form-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <div class="form-actions">
+                    <button type="submit" class="button">{% if is_edit %}Save Changes{% else %}Add Coursework{% endif %}</button>
+                    <a href="{% url 'main:show_coursework' %}" class="button button-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock content %}
