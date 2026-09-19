@@ -3,11 +3,13 @@ Run tests with:
     python manage.py test main
 """
 
+import json
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from main.models import Experience, Coursework
+from main.forms import CourseworkForm, ExperienceForm
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +295,15 @@ class CourseworkListPageTest(TestCase):
         self.assertContains(response,
                             f'href="{reverse("main:show_experience")}"')
 
+    def test_add_coursework_button_present(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, reverse("main:create_coursework"))
+
+    def test_coursework_cards_clickable_and_no_actions_on_card(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'class="course-card-link"')
+        self.assertNotContains(response, reverse("main:edit_coursework", args=[self.coursework.id]))
+
 
 # ===========================================================================
 # 5.  COURSEWORK DETAIL PAGE TESTS
@@ -307,6 +318,12 @@ class CourseworkDetailPageTest(TestCase):
         )
         self.url = reverse("main:show_coursework_detail",
                            args=[self.coursework.id])
+
+    def test_detail_page_has_adjacent_edit_and_delete_actions(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, reverse("main:edit_coursework", args=[self.coursework.id]))
+        self.assertContains(response, f'popovertarget="delete-cw-{self.coursework.id}"')
+        self.assertContains(response, 'class="course-detail-actions"')
 
     def test_returns_200(self):
         self.assertEqual(self.client.get(self.url).status_code, 200)
@@ -365,3 +382,136 @@ class CourseworkDetailPageTest(TestCase):
         """When journal_images are in context, the gallery block and captions render."""
         response = self.client.get(self.url)
         self.assertIn("journal_images", response.context)
+
+
+# ===========================================================================
+# 6.  COURSEWORK FORM & CRUD TESTS
+# ===========================================================================
+
+class CourseworkFormTest(TestCase):
+
+    def test_valid_form(self):
+        data = {
+            "name": "Database Systems",
+            "category": "Data & Information",
+            "description": "Relational algebra, SQL, and database normalization.",
+            "credits": 4,
+            "journal": "Studied ER diagrams and query optimization.",
+        }
+        form = CourseworkForm(data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_missing_required_fields(self):
+        form = CourseworkForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("name", form.errors)
+        self.assertIn("category", form.errors)
+        self.assertIn("description", form.errors)
+        self.assertIn("credits", form.errors)
+
+    def test_excluded_fields(self):
+        form = CourseworkForm()
+        self.assertNotIn("id", form.fields)
+        self.assertNotIn("created_at", form.fields)
+        self.assertNotIn("updated_at", form.fields)
+
+
+class CourseworkCrudAndJsonTest(TestCase):
+
+    def setUp(self):
+        self.coursework = make_coursework()
+
+    def test_create_coursework_get(self):
+        url = reverse("main:create_coursework")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "coursework_form.html")
+
+    def test_create_coursework_post_success(self):
+        url = reverse("main:create_coursework")
+        data = {
+            "name": "Software Engineering",
+            "category": "Software Development",
+            "description": "Agile principles and testing methodologies.",
+            "credits": 3,
+            "journal": "Sprints, standups, and unit testing.",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:show_coursework"))
+        self.assertTrue(Coursework.objects.filter(name="Software Engineering").exists())
+
+    def test_create_coursework_post_invalid(self):
+        url = reverse("main:create_coursework")
+        response = self.client.post(url, {})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "coursework_form.html")
+
+    def test_edit_coursework_get(self):
+        url = reverse("main:edit_coursework", args=[self.coursework.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "coursework_form.html")
+        self.assertContains(response, self.coursework.name)
+
+    def test_edit_coursework_post_success(self):
+        url = reverse("main:edit_coursework", args=[self.coursework.id])
+        data = {
+            "name": "Advanced Business Management",
+            "category": "Management and Strategy",
+            "description": "Updated deep dive into global markets.",
+            "credits": 4,
+            "journal": "Updated case study reflections.",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:show_coursework"))
+        self.coursework.refresh_from_db()
+        self.assertEqual(self.coursework.name, "Advanced Business Management")
+        self.assertEqual(self.coursework.credits, 4)
+
+    def test_delete_coursework_post_success(self):
+        url = reverse("main:delete_coursework", args=[self.coursework.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:show_coursework"))
+        self.assertFalse(Coursework.objects.filter(id=self.coursework.id).exists())
+
+    def test_delete_coursework_get_redirects_without_deleting(self):
+        url = reverse("main:delete_coursework", args=[self.coursework.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Coursework.objects.filter(id=self.coursework.id).exists())
+
+    def test_get_coursework_json_returns_valid_json(self):
+        url = reverse("main:get_coursework_json")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+        data = json.loads(response.content.decode("utf-8"))
+        self.assertIsInstance(data, list)
+        self.assertGreaterEqual(len(data), 1)
+        item = data[0]
+        self.assertIn("pk", item)
+        self.assertEqual(item["fields"]["name"], self.coursework.name)
+        self.assertEqual(item["fields"]["credits"], self.coursework.credits)
+
+    def test_get_coursework_json_category_filter(self):
+        make_coursework(name="AI Ethics", category="Ethics & Philosophy")
+        url = reverse("main:get_coursework_json") + "?category=Ethics"
+        response = self.client.get(url)
+        data = json.loads(response.content.decode("utf-8"))
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["fields"]["name"], "AI Ethics")
+
+    def test_show_coursework_renders_deserialized_json(self):
+        """show_coursework should retrieve json, deserialize it, and render objects."""
+        url = reverse("main:show_coursework")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("coursework_list", response.context)
+        courseworks = list(response.context["coursework_list"])
+        self.assertTrue(any(c.name == self.coursework.name for c in courseworks))
+        self.assertContains(response, self.coursework.name)
+        self.assertContains(response, reverse("main:create_coursework"))
+
