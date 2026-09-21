@@ -1,7 +1,20 @@
-from django.forms import ModelForm, TextInput, Textarea, Select, URLInput, NumberInput
+from django import forms
+from django.forms import ModelForm, TextInput, Textarea, Select, URLInput, NumberInput, PasswordInput
 from main.models import Experience, Coursework
 
 class ExperienceForm(ModelForm):
+    crud_password = forms.CharField(
+        label="Admin Secret Key",
+        widget=PasswordInput(
+            attrs={
+                "placeholder": "Enter secret key to authorize changes...",
+                "autocomplete": "current-password",
+            }
+        ),
+        required=False,
+        help_text="Required if not authorized via header.",
+    )
+
     class Meta:
         model = Experience
         fields = [
@@ -49,6 +62,18 @@ class ExperienceForm(ModelForm):
 
 
 class CourseworkForm(ModelForm):
+    crud_password = forms.CharField(
+        label="Admin Secret Key",
+        widget=PasswordInput(
+            attrs={
+                "placeholder": "Enter secret key to authorize changes...",
+                "autocomplete": "current-password",
+            }
+        ),
+        required=False,
+        help_text="Required if not authorized via header.",
+    )
+
     class Meta:
         model = Coursework
         fields = [

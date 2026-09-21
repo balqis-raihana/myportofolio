@@ -36,15 +36,24 @@
             Are you sure you want to delete
             <strong>{{ course.name }}</strong> ({{ course.category }})?
         </p>
-        <div class="project-delete-modal__actions">
-            <button type="button"
-                    class="button button-secondary"
-                    popovertarget="delete-cw-{{ course.id }}"
-                    popovertargetaction="hide">Cancel</button>
-            <form method="post" action="{% url 'main:delete_coursework' course.id %}">
-                {% csrf_token %}
+        <form method="post" action="{% url 'main:delete_coursework' course.id %}">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                <label for="delete-cw-pass-{{ course.id }}" style="font-size: 0.85rem; color: var(--text-muted);">Admin Secret Key:</label>
+                <input type="password"
+                       id="delete-cw-pass-{{ course.id }}"
+                       name="crud_password"
+                       placeholder="Enter secret key to delete"
+                       required
+                       autocomplete="current-password">
+            </div>
+            <div class="project-delete-modal__actions">
+                <button type="button"
+                        class="button button-secondary"
+                        popovertarget="delete-cw-{{ course.id }}"
+                        popovertargetaction="hide">Cancel</button>
                 <button type="submit" class="button button-danger">Yes, Delete</button>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>

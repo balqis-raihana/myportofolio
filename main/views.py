@@ -97,13 +97,34 @@ def show_experience(request):
     return render(request, "experience.html", context)
 
 
+def is_authorized_crud(request):
+    secret = os.getenv("CRUD_SECRET_KEY")
+    if not secret:
+        return True
+
+    header_secret = request.headers.get("X-CRUD-Secret") or request.META.get("HTTP_X_CRUD_SECRET")
+    if header_secret == secret:
+        return True
+
+    form_secret = request.POST.get("crud_password", "").strip()
+    if form_secret == secret:
+        return True
+
+    return False
+
+
 def create_experience(request):
     form = ExperienceForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "New experience successfully added!")
-        return redirect("main:show_experience")
+    if request.method == "POST":
+        if not is_authorized_crud(request):
+            form.is_valid()
+            form.add_error("crud_password", "Invalid or missing secret key! You are not authorized to perform this action.")
+            messages.error(request, "Authorization failed: Invalid secret key.")
+        elif form.is_valid():
+            form.save()
+            messages.success(request, "New experience successfully added!")
+            return redirect("main:show_experience")
 
     context = {
         "name": "Balqis Raihana",
@@ -117,10 +138,15 @@ def edit_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
     form = ExperienceForm(request.POST or None, instance=experience)
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Experience successfully updated!")
-        return redirect("main:show_experience")
+    if request.method == "POST":
+        if not is_authorized_crud(request):
+            form.is_valid()
+            form.add_error("crud_password", "Invalid or missing secret key! You are not authorized to perform this action.")
+            messages.error(request, "Authorization failed: Invalid secret key.")
+        elif form.is_valid():
+            form.save()
+            messages.success(request, "Experience successfully updated!")
+            return redirect("main:show_experience")
 
     context = {
         "name": "Balqis Raihana",
@@ -150,6 +176,9 @@ def delete_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
 
     if request.method == "POST":
+        if not is_authorized_crud(request):
+            messages.error(request, "Authorization failed: Invalid secret key!")
+            return redirect("main:show_experience")
         experience.delete()
         messages.success(request, "Experience successfully deleted!")
         return redirect("main:show_experience")
@@ -188,10 +217,15 @@ def show_coursework(request):
 def create_coursework(request):
     form = CourseworkForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "New coursework successfully added!")
-        return redirect("main:show_coursework")
+    if request.method == "POST":
+        if not is_authorized_crud(request):
+            form.is_valid()
+            form.add_error("crud_password", "Invalid or missing secret key! You are not authorized to perform this action.")
+            messages.error(request, "Authorization failed: Invalid secret key.")
+        elif form.is_valid():
+            form.save()
+            messages.success(request, "New coursework successfully added!")
+            return redirect("main:show_coursework")
 
     context = {
         "name": "Balqis Raihana",
@@ -205,10 +239,15 @@ def edit_coursework(request, coursework_id):
     coursework = get_object_or_404(Coursework, pk=coursework_id)
     form = CourseworkForm(request.POST or None, instance=coursework)
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Coursework successfully updated!")
-        return redirect("main:show_coursework")
+    if request.method == "POST":
+        if not is_authorized_crud(request):
+            form.is_valid()
+            form.add_error("crud_password", "Invalid or missing secret key! You are not authorized to perform this action.")
+            messages.error(request, "Authorization failed: Invalid secret key.")
+        elif form.is_valid():
+            form.save()
+            messages.success(request, "Coursework successfully updated!")
+            return redirect("main:show_coursework")
 
     context = {
         "name": "Balqis Raihana",
@@ -224,6 +263,9 @@ def delete_coursework(request, coursework_id):
     coursework = get_object_or_404(Coursework, pk=coursework_id)
 
     if request.method == "POST":
+        if not is_authorized_crud(request):
+            messages.error(request, "Authorization failed: Invalid secret key!")
+            return redirect("main:show_coursework")
         coursework.delete()
         messages.success(request, "Coursework successfully deleted!")
         return redirect("main:show_coursework")

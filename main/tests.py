@@ -4,12 +4,16 @@ Run tests with:
 """
 
 import json
+import os
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from main.models import Experience, Coursework
 from main.forms import CourseworkForm, ExperienceForm
+
+CRUD_SECRET = os.getenv("CRUD_SECRET_KEY", "JamesBond007")
+CRUD_AUTH_HEADERS = {"HTTP_X_CRUD_SECRET": CRUD_SECRET}
 
 
 # ---------------------------------------------------------------------------
@@ -204,15 +208,47 @@ class ExperiencePageTest(TestCase):
             "category": "internship",
             "started_at": "2026-01-01T09:00",
         }
-        response = self.client.post(add_url, data)
+        response = self.client.post(add_url, data, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Experience.objects.filter(title="Software Engineer Intern").exists())
 
+    def test_create_experience_post_success_with_form_password(self):
+        add_url = reverse("main:create_experience")
+        data = {
+            "title": "Data Analyst Intern",
+            "company": "Data Corp",
+            "description": "Building dashboards.",
+            "category": "internship",
+            "crud_password": CRUD_SECRET,
+        }
+        response = self.client.post(add_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Experience.objects.filter(title="Data Analyst Intern").exists())
+
+    def test_create_experience_post_unauthorized(self):
+        add_url = reverse("main:create_experience")
+        data = {
+            "title": "Hacker Role",
+            "company": "Evil Corp",
+            "description": "Trying without secret key.",
+            "category": "internship",
+        }
+        response = self.client.post(add_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Experience.objects.filter(title="Hacker Role").exists())
+        self.assertContains(response, "Invalid or missing secret key")
+
     def test_delete_experience_post(self):
+        delete_url = reverse("main:delete_experience", args=[self.experience.id])
+        response = self.client.post(delete_url, **CRUD_AUTH_HEADERS)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Experience.objects.filter(id=self.experience.id).exists())
+
+    def test_delete_experience_post_unauthorized(self):
         delete_url = reverse("main:delete_experience", args=[self.experience.id])
         response = self.client.post(delete_url)
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(Experience.objects.filter(id=self.experience.id).exists())
+        self.assertTrue(Experience.objects.filter(id=self.experience.id).exists())
 
     def test_get_experience_json(self):
         json_url = reverse("main:get_experience_json")
@@ -237,11 +273,25 @@ class ExperiencePageTest(TestCase):
             "category": "part-time",
             "started_at": "2026-02-01T08:00",
         }
-        response = self.client.post(edit_url, data)
+        response = self.client.post(edit_url, data, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
         self.experience.refresh_from_db()
         self.assertEqual(self.experience.title, "Lead Assistant Lecturer")
         self.assertEqual(self.experience.company, "Fasilkom UI")
+
+    def test_edit_experience_post_unauthorized(self):
+        edit_url = reverse("main:edit_experience", args=[self.experience.id])
+        data = {
+            "title": "Hacked Lecturer",
+            "company": "Fake UI",
+            "description": "Trying to edit without secret key.",
+            "category": "part-time",
+        }
+        response = self.client.post(edit_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.experience.refresh_from_db()
+        self.assertNotEqual(self.experience.title, "Hacked Lecturer")
+        self.assertContains(response, "Invalid or missing secret key")
 
     def test_filter_experience_by_category(self):
         make_experience(title="Startup Intern", category="internship")
@@ -436,14 +486,41 @@ class CourseworkCrudAndJsonTest(TestCase):
             "credits": 3,
             "journal": "Sprints, standups, and unit testing.",
         }
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("main:show_coursework"))
         self.assertTrue(Coursework.objects.filter(name="Software Engineering").exists())
 
+    def test_create_coursework_post_success_with_form_password(self):
+        url = reverse("main:create_coursework")
+        data = {
+            "name": "Data Science",
+            "category": "Data & Information",
+            "description": "Data analytics and ML basics.",
+            "credits": 3,
+            "crud_password": CRUD_SECRET,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:show_coursework"))
+        self.assertTrue(Coursework.objects.filter(name="Data Science").exists())
+
+    def test_create_coursework_post_unauthorized(self):
+        url = reverse("main:create_coursework")
+        data = {
+            "name": "Hacked Course",
+            "category": "Software",
+            "description": "Unauthorized coursework.",
+            "credits": 3,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Coursework.objects.filter(name="Hacked Course").exists())
+        self.assertContains(response, "Invalid or missing secret key")
+
     def test_create_coursework_post_invalid(self):
         url = reverse("main:create_coursework")
-        response = self.client.post(url, {})
+        response = self.client.post(url, {}, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "coursework_form.html")
 
@@ -463,19 +540,39 @@ class CourseworkCrudAndJsonTest(TestCase):
             "credits": 4,
             "journal": "Updated case study reflections.",
         }
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("main:show_coursework"))
         self.coursework.refresh_from_db()
         self.assertEqual(self.coursework.name, "Advanced Business Management")
         self.assertEqual(self.coursework.credits, 4)
 
+    def test_edit_coursework_post_unauthorized(self):
+        url = reverse("main:edit_coursework", args=[self.coursework.id])
+        data = {
+            "name": "Hacked Course Edit",
+            "category": "Hacking",
+            "description": "Unauthorized edit.",
+            "credits": 4,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 200)
+        self.coursework.refresh_from_db()
+        self.assertNotEqual(self.coursework.name, "Hacked Course Edit")
+        self.assertContains(response, "Invalid or missing secret key")
+
     def test_delete_coursework_post_success(self):
         url = reverse("main:delete_coursework", args=[self.coursework.id])
-        response = self.client.post(url)
+        response = self.client.post(url, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("main:show_coursework"))
         self.assertFalse(Coursework.objects.filter(id=self.coursework.id).exists())
+
+    def test_delete_coursework_post_unauthorized(self):
+        url = reverse("main:delete_coursework", args=[self.coursework.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Coursework.objects.filter(id=self.coursework.id).exists())
 
     def test_delete_coursework_get_redirects_without_deleting(self):
         url = reverse("main:delete_coursework", args=[self.coursework.id])
