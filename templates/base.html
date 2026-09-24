@@ -46,6 +46,13 @@
                             {% endfor %}
                         </ul>
                     </span>
+                    {% if user.is_authenticated %}
+                        <span class="nav-user">{{ user.username }}</span>
+                        <a href="{% url 'main:logout' %}">Logout</a>
+                    {% else %}
+                        <a href="{% url 'main:login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">Login</a>
+                        <a href="{% url 'main:register' %}" class="{% if request.resolver_match.url_name == 'register' %}active{% endif %}">Register</a>
+                    {% endif %}
                 </nav>
             </div>
         </header>

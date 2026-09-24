@@ -5,6 +5,7 @@ Run tests with:
 
 import json
 import os
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -611,4 +612,82 @@ class CourseworkCrudAndJsonTest(TestCase):
         self.assertTrue(any(c.name == self.coursework.name for c in courseworks))
         self.assertContains(response, self.coursework.name)
         self.assertContains(response, reverse("main:create_coursework"))
+
+
+# ===========================================================================
+# 7.  AUTHENTICATION TESTS (REGISTER, LOGIN, LOGOUT)
+# ===========================================================================
+
+class AuthenticationTests(TestCase):
+
+    def setUp(self):
+        self.username = "testuser"
+        self.password = "P@ssw0rd12345!"
+        self.user = User.objects.create_user(
+            username=self.username,
+            password=self.password
+        )
+
+    def test_register_page_get(self):
+        response = self.client.get(reverse("main:register"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "register.html")
+        self.assertContains(response, "Buat Akun")
+
+    def test_register_success(self):
+        response = self.client.post(reverse("main:register"), {
+            "username": "newuser",
+            "password1": "SecurePass123!@",
+            "password2": "SecurePass123!@",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:login"))
+        self.assertTrue(User.objects.filter(username="newuser").exists())
+
+    def test_register_password_mismatch(self):
+        response = self.client.post(reverse("main:register"), {
+            "username": "diffuser",
+            "password1": "SecurePass123!@",
+            "password2": "MismatchPass999!@",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="diffuser").exists())
+
+    def test_login_page_get(self):
+        response = self.client.get(reverse("main:login"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+        self.assertContains(response, "Login")
+
+    def test_login_success(self):
+        response = self.client.post(reverse("main:login"), {
+            "username": self.username,
+            "password": self.password,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:show_main"))
+        # Verify authenticated session
+        main_page = self.client.get(reverse("main:show_main"))
+        self.assertContains(main_page, self.username)
+        self.assertContains(main_page, reverse("main:logout"))
+
+    def test_login_invalid_credentials(self):
+        response = self.client.post(reverse("main:login"), {
+            "username": self.username,
+            "password": "wrongpassword",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+
+    def test_logout(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse("main:logout"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("main:show_main"))
+        # Verify navbar shows Login & Register again
+        main_page = self.client.get(reverse("main:show_main"))
+        self.assertNotContains(main_page, f'<span class="nav-user">{self.username}</span>')
+        self.assertContains(main_page, reverse("main:login"))
+        self.assertContains(main_page, reverse("main:register"))
+
 
