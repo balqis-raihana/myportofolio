@@ -226,6 +226,19 @@ section {
     box-shadow: 0 0 14px rgba(0, 240, 255, 0.2), inset 0 -2px 0 var(--accent);
 }
 
+.site-header nav .nav-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    background: rgba(0, 240, 255, 0.08);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
 /* Dropdown */
 .nav-item {
     position: relative;
