@@ -26,7 +26,9 @@
                         <span class="course-credits">{{ course.credits }} Credits</span>
                     </div>
                 </div>
-                {% include "components/coursework_delete_modal.html" with course=course %}
+                {% if user.is_superuser %}
+                    {% include "components/coursework_delete_modal.html" with course=course %}
+                {% endif %}
             </div>
 
             <p class="course-desc detail-desc">{{ course.description }}</p>

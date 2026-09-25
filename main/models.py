@@ -1,4 +1,5 @@
 import uuid
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
@@ -22,6 +23,9 @@ class Experience(models.Model):
     # Namun untuk tugas dan proyek mandiri selanjutnya, kamu sebaiknya menggunakan blank=True (atau blank=True, default=""). Jika kamu sudah terlanjur menjalankan migrasi sesuai kode di atas, kamu tidak perlu mengubahnya atau melakukan migrasi ulang karena keduanya tetap berfungsi dengan baik pada tutorial ini.
     started_at = models.DateTimeField(default=timezone.now)
     ended_at = models.DateTimeField(blank=True, null=True)
+    starred_by = models.ManyToManyField(
+        User, related_name="starred_experiences", blank=True
+    )
     def __str__(self):
         return self.title
     

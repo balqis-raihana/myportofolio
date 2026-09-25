@@ -1620,6 +1620,60 @@ section {
     }
 }
 
+/* ==========================================================================
+   STAR BUTTON & ACTIONS
+   ========================================================================== */
+
+.experience-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.star-form {
+    display: inline;
+}
+
+.button-star {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface-elevated, #132030);
+    color: var(--ink, #e6f1f8);
+    border: 1px solid var(--line, #1c2c3d);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius, 6px);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.button-star:hover {
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.button-star.is-starred {
+    background: var(--accent);
+    color: #03060a;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+
+.star-count {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 0.8rem;
+}
+
+.button-star.is-starred .star-count {
+    background: rgba(0, 0, 0, 0.25);
+    color: #03060a;
+}
+
 
 
 

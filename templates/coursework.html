@@ -13,10 +13,12 @@
                     <p class="section-kicker">Academic Focus</p>
                     <h1 class="section-title">Relevant Coursework</h1>
                 </div>
-                <a href="{% url 'main:create_coursework' %}" class="button project-add-button">
-                    <span aria-hidden="true">+</span>
-                    Add Coursework
-                </a>
+                {% if user.is_superuser %}
+                    <a href="{% url 'main:create_coursework' %}" class="button project-add-button">
+                        <span aria-hidden="true">+</span>
+                        Add Coursework
+                    </a>
+                {% endif %}
             </div>
 
             {% if messages %}
