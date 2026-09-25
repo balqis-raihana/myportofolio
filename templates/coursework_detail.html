@@ -26,21 +26,23 @@
                         <span class="course-credits">{{ course.credits }} Credits</span>
                     </div>
                 </div>
-                <div class="course-detail-actions">
-                    <a href="{% url 'main:edit_coursework' course.id %}"
-                       class="button button-secondary"
-                       aria-label="Edit {{ course.name }}"
-                       title="Edit course">
-                        Edit
-                    </a>
-                    <button type="button"
-                            class="button button-danger"
-                            popovertarget="delete-cw-{{ course.id }}"
-                            aria-label="Delete {{ course.name }}"
-                            title="Delete course">
-                        Delete
-                    </button>
-                </div>
+                {% if user.is_superuser %}
+                    <div class="course-detail-actions">
+                        <a href="{% url 'main:edit_coursework' course.id %}"
+                           class="button button-secondary"
+                           aria-label="Edit {{ course.name }}"
+                           title="Edit course">
+                            Edit
+                        </a>
+                        <button type="button"
+                                class="button button-danger"
+                                popovertarget="delete-cw-{{ course.id }}"
+                                aria-label="Delete {{ course.name }}"
+                                title="Delete course">
+                            Delete
+                        </button>
+                    </div>
+                {% endif %}
             </div>
 
             <p class="course-desc detail-desc">{{ course.description }}</p>
@@ -70,6 +72,7 @@
                 {% endif %}
             </div>
 
+            {% if user.is_superuser %}
             <!-- Delete confirmation modal -->
             <div id="delete-cw-{{ course.id }}"
                  class="project-delete-modal"
@@ -105,6 +108,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
 
             <a href="{% url 'main:show_coursework' %}" class="back-link">← Back to Coursework</a>
 

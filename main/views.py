@@ -1,9 +1,12 @@
+import datetime
 import os
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.text import slugify
@@ -13,6 +16,7 @@ from main.forms import ExperienceForm, CourseworkForm
 
 
 def show_main(request):
+    last_login = request.COOKIES.get('last_login', 'Belum ada sesi login / Cookie tidak ditemukan')
     education_list = [
         {
             "period": "2025 — Present",
@@ -72,6 +76,7 @@ def show_main(request):
             Science and analytical problem-solving, with the long-term goal of exploring IT Audit at the 
             intersection of technology, data, processes, and business."""
         ),
+        "last_login": last_login,
         "education_list": education_list,
         "interests_list": interests_list,
         "coursework_list": Coursework.objects.all(),
@@ -99,7 +104,11 @@ def show_experience(request):
     return render(request, "experience.html", context)
 
 
+@login_required(login_url="/login/")
 def create_experience(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     form = ExperienceForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -115,7 +124,11 @@ def create_experience(request):
     return render(request, "experience_form.html", context)
 
 
+@login_required(login_url="/login/")
 def edit_experience(request, experience_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     experience = get_object_or_404(Experience, pk=experience_id)
     form = ExperienceForm(request.POST or None, instance=experience)
 
@@ -144,17 +157,34 @@ def get_experience_json(request):
     if category_query and category_query != "all":
         experiences = experiences.filter(category=category_query)
 
-    experiences_json = serializers.serialize("json", experiences)
+    experiences_json = serializers.serialize("json", experiences, use_natural_foreign_keys=True)
     return HttpResponse(experiences_json, content_type="application/json")
 
 
+@login_required(login_url="/login/")
 def delete_experience(request, experience_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     experience = get_object_or_404(Experience, pk=experience_id)
 
     if request.method == "POST":
         experience.delete()
         messages.success(request, "Experience successfully deleted!")
         return redirect("main:show_experience")
+
+    return redirect("main:show_experience")
+
+
+@login_required(login_url="/login/")
+def toggle_star(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+
+    if request.method == "POST":
+        if request.user in experience.starred_by.all():
+            experience.starred_by.remove(request.user)
+        else:
+            experience.starred_by.add(request.user)
 
     return redirect("main:show_experience")
 
@@ -187,7 +217,11 @@ def show_coursework(request):
     return render(request, "coursework.html", context)
 
 
+@login_required(login_url="/login/")
 def create_coursework(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     form = CourseworkForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -203,7 +237,11 @@ def create_coursework(request):
     return render(request, "coursework_form.html", context)
 
 
+@login_required(login_url="/login/")
 def edit_coursework(request, coursework_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     coursework = get_object_or_404(Coursework, pk=coursework_id)
     form = CourseworkForm(request.POST or None, instance=coursework)
 
@@ -222,7 +260,11 @@ def edit_coursework(request, coursework_id):
     return render(request, "coursework_form.html", context)
 
 
+@login_required(login_url="/login/")
 def delete_coursework(request, coursework_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     coursework = get_object_or_404(Coursework, pk=coursework_id)
 
     if request.method == "POST":
@@ -307,8 +349,11 @@ def register(request):
 def login_user(request):
     form = AuthenticationForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
-        login(request, form.get_user())
-        return redirect("main:show_main")
+        user = form.get_user()
+        login(request, user)
+        response = redirect("main:show_main")
+        response.set_cookie('last_login', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        return response
     context = {
         "name": "Balqis Raihana",
         "form": form,
@@ -318,5 +363,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
-    return redirect("main:show_main")
+    response = redirect("main:show_main")
+    response.delete_cookie('last_login')
+    return response
 
