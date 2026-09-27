@@ -26,7 +26,7 @@
                         <span class="course-credits">{{ course.credits }} Credits</span>
                     </div>
                 </div>
-                {% if user.is_superuser %}
+                {% if user.is_superuser or is_editor %}
                     <div class="course-detail-actions">
                         <a href="{% url 'main:edit_coursework' course.id %}"
                            class="button button-secondary"
@@ -34,13 +34,15 @@
                            title="Edit course">
                             Edit
                         </a>
-                        <button type="button"
-                                class="button button-danger"
-                                popovertarget="delete-cw-{{ course.id }}"
-                                aria-label="Delete {{ course.name }}"
-                                title="Delete course">
-                            Delete
-                        </button>
+                        {% if user.is_superuser %}
+                            <button type="button"
+                                    class="button button-danger"
+                                    popovertarget="delete-cw-{{ course.id }}"
+                                    aria-label="Delete {{ course.name }}"
+                                    title="Delete course">
+                                Delete
+                            </button>
+                        {% endif %}
                     </div>
                 {% endif %}
             </div>

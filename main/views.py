@@ -15,6 +15,10 @@ from main.models import Experience, Coursework
 from main.forms import ExperienceForm, CourseworkForm
 
 
+def is_editor(user):
+    return user.is_authenticated and (user.is_superuser or user.groups.filter(name="Editor").exists())
+
+
 def show_main(request):
     last_login = request.COOKIES.get('last_login', 'Belum ada sesi login / Cookie tidak ditemukan')
     education_list = [
@@ -100,6 +104,7 @@ def show_experience(request):
         "title_query": title_query,
         "category_query": category_query,
         "coursework_list": Coursework.objects.all(),
+        "is_editor": is_editor(request.user),
     }
     return render(request, "experience.html", context)
 
@@ -126,7 +131,7 @@ def create_experience(request):
 
 @login_required(login_url="/login/")
 def edit_experience(request, experience_id):
-    if not request.user.is_superuser:
+    if not is_editor(request.user):
         raise PermissionDenied
 
     experience = get_object_or_404(Experience, pk=experience_id)
@@ -213,6 +218,7 @@ def show_coursework(request):
         "name": "Balqis Raihana",
         "coursework_list": coursework_list,
         "category_query": category_query,
+        "is_editor": is_editor(request.user),
     }
     return render(request, "coursework.html", context)
 
@@ -239,7 +245,7 @@ def create_coursework(request):
 
 @login_required(login_url="/login/")
 def edit_coursework(request, coursework_id):
-    if not request.user.is_superuser:
+    if not is_editor(request.user):
         raise PermissionDenied
 
     coursework = get_object_or_404(Coursework, pk=coursework_id)
@@ -329,6 +335,7 @@ def show_coursework_detail(request, pk):
         "course": course,
         "coursework_list": Coursework.objects.all(),
         "journal_images": journal_images,
+        "is_editor": is_editor(request.user),
     }
     return render(request, "coursework_detail.html", context)
 
