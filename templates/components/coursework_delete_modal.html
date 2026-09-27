@@ -5,13 +5,15 @@
        title="Edit coursework">
         Edit
     </a>
-    <button type="button"
-            class="button button-danger"
-            popovertarget="delete-cw-{{ course.id }}"
-            aria-label="Delete {{ course.name }}"
-            title="Delete coursework">
-        Delete
-    </button>
+    {% if user.is_superuser %}
+        <button type="button"
+                class="button button-danger"
+                popovertarget="delete-cw-{{ course.id }}"
+                aria-label="Delete {{ course.name }}"
+                title="Delete coursework">
+            Delete
+        </button>
+    {% endif %}
 </div>
 
 <div id="delete-cw-{{ course.id }}"

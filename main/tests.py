@@ -5,7 +5,7 @@ Run tests with:
 
 import json
 import os
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -195,12 +195,16 @@ class ExperiencePageTest(TestCase):
         self.assertNotContains(response, "Frontend Developer")
 
     def test_create_experience_get(self):
+        admin = User.objects.create_superuser(username="admin_exp", password="pwd")
+        self.client.login(username="admin_exp", password="pwd")
         add_url = reverse("main:create_experience")
         response = self.client.get(add_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience_form.html")
 
     def test_create_experience_post_success(self):
+        admin = User.objects.create_superuser(username="admin_exp2", password="pwd")
+        self.client.login(username="admin_exp2", password="pwd")
         add_url = reverse("main:create_experience")
         data = {
             "title": "Software Engineer Intern",
@@ -240,6 +244,8 @@ class ExperiencePageTest(TestCase):
         self.assertContains(response, "Invalid or missing secret key")
 
     def test_delete_experience_post(self):
+        admin = User.objects.create_superuser(username="admin_exp3", password="pwd")
+        self.client.login(username="admin_exp3", password="pwd")
         delete_url = reverse("main:delete_experience", args=[self.experience.id])
         response = self.client.post(delete_url, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
@@ -259,6 +265,8 @@ class ExperiencePageTest(TestCase):
         self.assertIn(self.experience.title, response.content.decode("utf-8"))
 
     def test_edit_experience_get(self):
+        admin = User.objects.create_superuser(username="admin_exp4", password="pwd")
+        self.client.login(username="admin_exp4", password="pwd")
         edit_url = reverse("main:edit_experience", args=[self.experience.id])
         response = self.client.get(edit_url)
         self.assertEqual(response.status_code, 200)
@@ -266,6 +274,8 @@ class ExperiencePageTest(TestCase):
         self.assertContains(response, self.experience.title)
 
     def test_edit_experience_post_success(self):
+        admin = User.objects.create_superuser(username="admin_exp5", password="pwd")
+        self.client.login(username="admin_exp5", password="pwd")
         edit_url = reverse("main:edit_experience", args=[self.experience.id])
         data = {
             "title": "Lead Assistant Lecturer",
@@ -346,9 +356,16 @@ class CourseworkListPageTest(TestCase):
         self.assertContains(response,
                             f'href="{reverse("main:show_experience")}"')
 
-    def test_add_coursework_button_present(self):
-        response = self.client.get(self.url)
-        self.assertContains(response, reverse("main:create_coursework"))
+    def test_add_coursework_button_present_for_superuser_only(self):
+        # Anonymous user should not see Add Coursework button
+        response_anon = self.client.get(self.url)
+        self.assertNotContains(response_anon, reverse("main:create_coursework"))
+
+        # Superuser should see Add Coursework button
+        admin = User.objects.create_superuser(username="admin_cw_btn", password="pwd")
+        self.client.login(username="admin_cw_btn", password="pwd")
+        response_admin = self.client.get(self.url)
+        self.assertContains(response_admin, reverse("main:create_coursework"))
 
     def test_coursework_cards_clickable_and_no_actions_on_card(self):
         response = self.client.get(self.url)
@@ -371,6 +388,8 @@ class CourseworkDetailPageTest(TestCase):
                            args=[self.coursework.id])
 
     def test_detail_page_has_adjacent_edit_and_delete_actions(self):
+        admin = User.objects.create_superuser(username="admin_cw_detail", password="pwd")
+        self.client.login(username="admin_cw_detail", password="pwd")
         response = self.client.get(self.url)
         self.assertContains(response, reverse("main:edit_coursework", args=[self.coursework.id]))
         self.assertContains(response, f'popovertarget="delete-cw-{self.coursework.id}"')
@@ -473,12 +492,16 @@ class CourseworkCrudAndJsonTest(TestCase):
         self.coursework = make_coursework()
 
     def test_create_coursework_get(self):
+        admin = User.objects.create_superuser(username="admin_cw", password="pwd")
+        self.client.login(username="admin_cw", password="pwd")
         url = reverse("main:create_coursework")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "coursework_form.html")
 
     def test_create_coursework_post_success(self):
+        admin = User.objects.create_superuser(username="admin_cw2", password="pwd")
+        self.client.login(username="admin_cw2", password="pwd")
         url = reverse("main:create_coursework")
         data = {
             "name": "Software Engineering",
@@ -520,12 +543,16 @@ class CourseworkCrudAndJsonTest(TestCase):
         self.assertContains(response, "Invalid or missing secret key")
 
     def test_create_coursework_post_invalid(self):
+        admin = User.objects.create_superuser(username="admin_cw3", password="pwd")
+        self.client.login(username="admin_cw3", password="pwd")
         url = reverse("main:create_coursework")
         response = self.client.post(url, {}, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "coursework_form.html")
 
     def test_edit_coursework_get(self):
+        admin = User.objects.create_superuser(username="admin_cw4", password="pwd")
+        self.client.login(username="admin_cw4", password="pwd")
         url = reverse("main:edit_coursework", args=[self.coursework.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -533,6 +560,8 @@ class CourseworkCrudAndJsonTest(TestCase):
         self.assertContains(response, self.coursework.name)
 
     def test_edit_coursework_post_success(self):
+        admin = User.objects.create_superuser(username="admin_cw5", password="pwd")
+        self.client.login(username="admin_cw5", password="pwd")
         url = reverse("main:edit_coursework", args=[self.coursework.id])
         data = {
             "name": "Advanced Business Management",
@@ -563,6 +592,8 @@ class CourseworkCrudAndJsonTest(TestCase):
         self.assertContains(response, "Invalid or missing secret key")
 
     def test_delete_coursework_post_success(self):
+        admin = User.objects.create_superuser(username="admin_cw6", password="pwd")
+        self.client.login(username="admin_cw6", password="pwd")
         url = reverse("main:delete_coursework", args=[self.coursework.id])
         response = self.client.post(url, **CRUD_AUTH_HEADERS)
         self.assertEqual(response.status_code, 302)
@@ -576,6 +607,8 @@ class CourseworkCrudAndJsonTest(TestCase):
         self.assertTrue(Coursework.objects.filter(id=self.coursework.id).exists())
 
     def test_delete_coursework_get_redirects_without_deleting(self):
+        admin = User.objects.create_superuser(username="admin_cw7", password="pwd")
+        self.client.login(username="admin_cw7", password="pwd")
         url = reverse("main:delete_coursework", args=[self.coursework.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
@@ -604,6 +637,8 @@ class CourseworkCrudAndJsonTest(TestCase):
 
     def test_show_coursework_renders_deserialized_json(self):
         """show_coursework should retrieve json, deserialize it, and render objects."""
+        admin = User.objects.create_superuser(username="admin_cw_render", password="pwd")
+        self.client.login(username="admin_cw_render", password="pwd")
         url = reverse("main:show_coursework")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -689,5 +724,156 @@ class AuthenticationTests(TestCase):
         self.assertNotContains(main_page, f'<span class="nav-user">{self.username}</span>')
         self.assertContains(main_page, reverse("main:login"))
         self.assertContains(main_page, reverse("main:register"))
+
+
+# ===========================================================================
+# 8.  ROLE-BASED AUTHORIZATION TESTS (4 ROLES)
+# ===========================================================================
+
+class AuthorizationRoleTests(TestCase):
+
+    def setUp(self):
+        self.experience = make_experience()
+        self.coursework = make_coursework()
+
+        # 1. Anonymous visitor (self.client without login)
+        # 2. Regular user
+        self.regular_user = User.objects.create_user(username="regular_user", password="pwd")
+        # 3. Editor user
+        self.editor_user = User.objects.create_user(username="editor_user", password="pwd")
+        editor_group, _ = Group.objects.get_or_create(name="Editor")
+        self.editor_user.groups.add(editor_group)
+        # 4. Superuser (Owner)
+        self.superuser = User.objects.create_superuser(username="super_owner", password="pwd")
+
+    # --- Role 1: Anonymous visitor ---
+    def test_anonymous_can_read_experience_and_coursework(self):
+        res_exp = self.client.get(reverse("main:show_experience"))
+        self.assertEqual(res_exp.status_code, 200)
+        res_cw = self.client.get(reverse("main:show_coursework"))
+        self.assertEqual(res_cw.status_code, 200)
+        res_cw_detail = self.client.get(reverse("main:show_coursework_detail", args=[self.coursework.id]))
+        self.assertEqual(res_cw_detail.status_code, 200)
+
+    def test_anonymous_mutation_redirects_to_login(self):
+        add_url = reverse("main:create_experience")
+        res = self.client.get(add_url)
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(reverse("main:login"), res.url)
+
+        res_star = self.client.post(reverse("main:toggle_star", args=[self.experience.id]))
+        self.assertEqual(res_star.status_code, 302)
+        self.assertIn(reverse("main:login"), res_star.url)
+
+    # --- Role 2: Regular user ---
+    def test_regular_user_cannot_create_or_edit_or_delete(self):
+        self.client.login(username="regular_user", password="pwd")
+
+        # Create
+        res_create = self.client.get(reverse("main:create_experience"))
+        self.assertEqual(res_create.status_code, 403)
+
+        # Edit
+        res_edit = self.client.get(reverse("main:edit_experience", args=[self.experience.id]))
+        self.assertEqual(res_edit.status_code, 403)
+
+        # Delete
+        res_delete = self.client.post(reverse("main:delete_experience", args=[self.experience.id]))
+        self.assertEqual(res_delete.status_code, 403)
+
+    # --- Role 3: Editor user ---
+    def test_editor_user_can_edit_but_cannot_create_or_delete(self):
+        self.client.login(username="editor_user", password="pwd")
+
+        # Cannot create -> 403
+        res_create = self.client.get(reverse("main:create_experience"))
+        self.assertEqual(res_create.status_code, 403)
+
+        # Can edit -> 200 / 302
+        res_edit_get = self.client.get(reverse("main:edit_experience", args=[self.experience.id]))
+        self.assertEqual(res_edit_get.status_code, 200)
+
+        res_edit_post = self.client.post(reverse("main:edit_experience", args=[self.experience.id]), {
+            "title": "Edited by Editor",
+            "company": "Editor Corp",
+            "description": "Updated description",
+            "category": "internship",
+            "started_at": "2026-03-01T08:00",
+        })
+        self.assertEqual(res_edit_post.status_code, 302)
+        self.experience.refresh_from_db()
+        self.assertEqual(self.experience.title, "Edited by Editor")
+
+        # Cannot delete -> 403
+        res_del = self.client.post(reverse("main:delete_experience", args=[self.experience.id]))
+        self.assertEqual(res_del.status_code, 403)
+
+    # --- Role 4: Superuser (Owner) ---
+    def test_superuser_can_create_edit_and_delete(self):
+        self.client.login(username="super_owner", password="pwd")
+
+        # Create -> 200
+        res_create = self.client.get(reverse("main:create_experience"))
+        self.assertEqual(res_create.status_code, 200)
+
+        # Edit -> 200
+        res_edit = self.client.get(reverse("main:edit_experience", args=[self.experience.id]))
+        self.assertEqual(res_edit.status_code, 200)
+
+        # Delete -> 302
+        res_del = self.client.post(reverse("main:delete_experience", args=[self.experience.id]))
+        self.assertEqual(res_del.status_code, 302)
+        self.assertFalse(Experience.objects.filter(id=self.experience.id).exists())
+
+
+# ===========================================================================
+# 9.  STAR FEATURE TESTS
+# ===========================================================================
+
+class StarFeatureTests(TestCase):
+
+    def setUp(self):
+        self.experience = make_experience()
+        self.user1 = User.objects.create_user(username="star_user1", password="pwd")
+        self.user2 = User.objects.create_user(username="star_user2", password="pwd")
+
+    def test_star_and_unstar(self):
+        self.client.login(username="star_user1", password="pwd")
+        star_url = reverse("main:toggle_star", args=[self.experience.id])
+
+        # 1. First click: Star the experience
+        res = self.client.post(star_url)
+        self.assertEqual(res.status_code, 302)
+        self.experience.refresh_from_db()
+        self.assertEqual(self.experience.starred_by.count(), 1)
+        self.assertIn(self.user1, self.experience.starred_by.all())
+
+        # 2. Second click: Unstar
+        res = self.client.post(star_url)
+        self.assertEqual(res.status_code, 302)
+        self.experience.refresh_from_db()
+        self.assertEqual(self.experience.starred_by.count(), 0)
+
+    def test_multiple_users_star(self):
+        star_url = reverse("main:toggle_star", args=[self.experience.id])
+
+        self.client.login(username="star_user1", password="pwd")
+        self.client.post(star_url)
+
+        self.client.login(username="star_user2", password="pwd")
+        self.client.post(star_url)
+
+        self.experience.refresh_from_db()
+        self.assertEqual(self.experience.starred_by.count(), 2)
+
+    def test_api_integrity_uses_natural_keys(self):
+        self.experience.starred_by.add(self.user1)
+        res = self.client.get(reverse("main:get_experience_json"))
+        data = json.loads(res.content.decode("utf-8"))
+        self.assertEqual(res.status_code, 200)
+        # Should contain username not internal primary key integer
+        starred_field = data[0]["fields"]["starred_by"]
+        self.assertIn(["star_user1"], starred_field)
+
 
 
