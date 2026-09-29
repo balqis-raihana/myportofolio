@@ -7,9 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.text import slugify
+from django.views.decorators.http import require_POST
 
 from main.models import Experience, Coursework
 from main.forms import ExperienceForm, CourseworkForm
@@ -89,22 +90,16 @@ def show_main(request):
 
 
 def show_experience(request):
-    json_response = get_experience_json(request)
-    experiences = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-    experience_list = [item.object for item in experiences]
     title_query = request.GET.get("title", "").strip()
     category_query = request.GET.get("category", "").strip().lower()
 
     context = {
         "name": "Balqis Raihana",
-        "experience_list": experience_list,
         "title_query": title_query,
         "category_query": category_query,
         "coursework_list": Coursework.objects.all(),
         "is_editor": is_editor(request.user),
+        "form": ExperienceForm(),
     }
     return render(request, "experience.html", context)
 
@@ -150,6 +145,23 @@ def create_experience(request):
     return render(request, "experience_form.html", context)
 
 
+@require_POST
+def create_experience_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan proyek."},
+            status=403,
+        )
+    form = ExperienceForm(request.POST)
+    if form.is_valid():
+        experience = form.save()
+        return JsonResponse(
+            {"message": "Pengalaman berhasil ditambahkan.", "pk": str(experience.id)},
+            status=201,
+        )
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
+
 @login_required(login_url="/login/")
 def edit_experience(request, experience_id):
     if not is_editor(request.user):
@@ -181,15 +193,41 @@ def edit_experience(request, experience_id):
 def get_experience_json(request):
     title_query = request.GET.get("title", "").strip()
     category_query = request.GET.get("category", "").strip().lower()
-    experiences = Experience.objects.all().order_by("-started_at")
+    experiences = Experience.objects.prefetch_related('starred_by').all().order_by("-started_at")
 
     if title_query:
         experiences = experiences.filter(title__icontains=title_query)
     if category_query and category_query != "all":
         experiences = experiences.filter(category=category_query)
 
-    experiences_json = serializers.serialize("json", experiences, use_natural_foreign_keys=True)
-    return HttpResponse(experiences_json, content_type="application/json")
+    # Konstruksi data JSON secara manual agar bisa menyisipkan logika Star
+    data = []
+    for exp in experiences:
+        starred_users = exp.starred_by.all()
+        is_starred = request.user in starred_users if request.user.is_authenticated else False
+        starred_by_names = ", ".join([u.username for u in starred_users])
+        data.append({
+            "pk": str(exp.id),
+            "fields": {
+                "title": exp.title,
+                "company": exp.company,
+                "description": exp.description,
+                "category": exp.category,
+                "category_display": exp.get_category_display(),
+                "thumbnail": exp.thumbnail,
+                "started_at": exp.started_at.isoformat() if exp.started_at else None,
+                "started_at_display": exp.started_at.strftime("%b %Y") if exp.started_at else "",
+                "ended_at": exp.ended_at.isoformat() if exp.ended_at else None,
+                "ended_at_display": exp.ended_at.strftime("%b %Y") if exp.ended_at else "",
+                "is_ongoing": exp.is_ongoing,
+                "star_count": starred_users.count(),
+                "is_starred": is_starred,
+                "starred_by_names": starred_by_names,
+                "starred_by": [[u.username] for u in starred_users],
+            }
+        })
+    return JsonResponse(data, safe=False)
+
 
 
 @login_required(login_url="/login/")

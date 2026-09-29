@@ -1,5 +1,7 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms import ModelForm, TextInput, Textarea, Select, URLInput, NumberInput, PasswordInput
+from django.utils.html import strip_tags
 from main.models import Experience, Coursework
 
 class ExperienceForm(ModelForm):
@@ -59,6 +61,18 @@ class ExperienceForm(ModelForm):
                 }
             ),
         }
+
+    def clean_title(self):
+        title = strip_tags(self.cleaned_data.get("title", "")).strip()
+        if not title:
+            raise ValidationError("Nama proyek tidak boleh hanya berisi tag HTML.")
+        return title
+
+    def clean_company(self):
+        return strip_tags(self.cleaned_data.get("company", "")).strip()
+
+    def clean_description(self):
+        return strip_tags(self.cleaned_data.get("description", "")).strip()
 
 
 class CourseworkForm(ModelForm):

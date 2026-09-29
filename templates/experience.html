@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block meta %}
     <title>Experience - {{ name }}</title>
@@ -13,10 +14,10 @@
             <div class="project-header">
                 <h1 class="section-title">Experience</h1>
                 {% if user.is_superuser %}
-                    <a href="{% url 'main:create_experience' %}" class="button project-add-button">
+                    <button type="button" class="button project-add-button" popovertarget="add-experience-modal">
                         <span aria-hidden="true">+</span>
                         Add Experience
-                    </a>
+                    </button>
                 {% endif %}
             </div>
 
@@ -29,93 +30,291 @@
             {% endif %}
 
             <!-- Category Filter Pills -->
-            <div class="category-filters" role="group" aria-label="Filter experiences by category">
-                <a href="{% url 'main:show_experience' %}{% if title_query %}?title={{ title_query }}{% endif %}"
-                   class="filter-pill {% if not category_query or category_query == 'all' %}active{% endif %}">
-                    All
-                </a>
-                <a href="{% url 'main:show_experience' %}?category=internship{% if title_query %}&title={{ title_query }}{% endif %}"
-                   class="filter-pill {% if category_query == 'internship' %}active{% endif %}">
-                    Internship
-                </a>
-                <a href="{% url 'main:show_experience' %}?category=part-time{% if title_query %}&title={{ title_query }}{% endif %}"
-                   class="filter-pill {% if category_query == 'part-time' %}active{% endif %}">
-                    Part-time
-                </a>
-                <a href="{% url 'main:show_experience' %}?category=organizational{% if title_query %}&title={{ title_query }}{% endif %}"
-                   class="filter-pill {% if category_query == 'organizational' %}active{% endif %}">
-                    Organizational
-                </a>
-                <a href="{% url 'main:show_experience' %}?category=full-time{% if title_query %}&title={{ title_query }}{% endif %}"
-                   class="filter-pill {% if category_query == 'full-time' %}active{% endif %}">
-                    Full-time
-                </a>
+            <div class="category-filters" role="group" aria-label="Filter experiences by category" id="categoryFilterContainer">
+                <button type="button" data-category="all" class="filter-pill active">All</button>
+                <button type="button" data-category="internship" class="filter-pill">Internship</button>
+                <button type="button" data-category="part-time" class="filter-pill">Part-time</button>
+                <button type="button" data-category="organizational" class="filter-pill">Organizational</button>
+                <button type="button" data-category="full-time" class="filter-pill">Full-time</button>
             </div>
 
-            <form method="get" action="{% url 'main:show_experience' %}" class="project-search">
-                {% if category_query %}
-                    <input type="hidden" name="category" value="{{ category_query }}">
-                {% endif %}
+            <form id="project-search-form" class="project-search">
                 <input type="search"
+                       id="search-input"
                        name="title"
                        value="{{ title_query }}"
                        placeholder="Search by role / position"
                        class="project-search__input"
                        aria-label="Search by role / position">
                 <button type="submit" class="button">Search</button>
-                {% if title_query or category_query %}
-                    <a href="{% url 'main:show_experience' %}" class="button button-secondary" title="Clear all filters">Reset</a>
-                {% endif %}
+                <button type="button" id="reset-button" class="button button-secondary" title="Clear all filters">Reset</button>
             </form>
 
-            <!-- Container Timeline Vertikal -->
-            <div class="timeline">
-                {% for experience in experience_list %}
-                    <article class="timeline-item">
-                        <!-- Titik bulat -->
-                        <div class="timeline-marker"></div>
-
-                        <!-- Baris tanggal & status (ongoing / completed) -->
-                        <div class="timeline-meta">
-                            <time class="timeline-date">
-                                {{ experience.started_at|date:"M Y" }} — 
-                                {% if experience.is_ongoing %}
-                                    Ongoing
-                                {% else %}
-                                    {{ experience.ended_at|date:"M Y" }} (Completed)
-                                {% endif %}
-                            </time>
-                            <span class="timeline-tag">{{ experience.get_category_display }}</span>
-                        </div>
-
-                        <!-- Judul Peran / Role -->
-                        <h2 class="timeline-role">{{ experience.title }}</h2>
-
-                        <!-- Nama Perusahaan / Kampus / Organisasi -->
-                        {% if experience.company %}
-                            <p class="timeline-org">{{ experience.company }}</p>
-                        {% endif %}
-
-                        <!-- Deskripsi Pengalaman -->
-                        <p class="timeline-desc">{{ experience.description }}</p>
-
-                        <!-- Star Button Component -->
-                        <div class="experience-card-actions">
-                            {% include "components/experience_star.html" with experience=experience %}
-                            {% if user.is_superuser or is_editor %}
-                                {% include "components/experience_delete_modal.html" with experience=experience %}
-                            {% endif %}
-                        </div>
-                    </article>
-                {% empty %}
-                    {% if title_query %}
-                        <p class="empty-state">No experience found with that title.</p>
-                    {% else %}
-                        <p class="empty-state">No experiences added yet.</p>
-                    {% endif %}
-                {% endfor %}
+            <!-- Loading State -->
+            <div id="loading" class="empty-state hide">
+                <p>Memuat experiences...</p>
             </div>
+
+            <!-- Error State -->
+            <div id="error" class="empty-state hide">
+                <p>Gagal memuat data experiences. Silakan coba lagi.</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty" class="empty-state hide">
+                <p>Belum ada pengalaman yang ditambahkan atau ditemukan.</p>
+            </div>
+
+            <!-- Container Timeline Vertikal via AJAX -->
+            <div id="grid" class="timeline hide"></div>
         </div>
     </section>
 </main>
-{% endblock content %}
+
+{% if user.is_superuser %}
+    {% include "components/experience_form_modal.html" %}
+{% endif %}
+
+<script>
+    // Konfigurasi
+    const BASE_PROJECTS_ENDPOINT = "{% url 'main:get_experience_json' %}";
+    const CREATE_PROJECT_ENDPOINT = "{% url 'main:create_experience_ajax' %}";
+    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+    const IS_EDITOR = "{{ is_editor|yesno:'true,false' }}" === "true";
+    const SEARCH_DEBOUNCE_DELAY = 300;
+
+    let projectsAbortController;
+    let searchDebounceTimer;
+    let currentCategory = "all";
+
+    // Elemen DOM
+    const loadingState = document.getElementById('loading');
+    const errorState = document.getElementById('error');
+    const emptyState = document.getElementById('empty');
+    const gridContainer = document.getElementById('grid');
+    const searchForm = document.getElementById('project-search-form');
+    const searchInput = document.getElementById('search-input');
+    const resetBtn = document.getElementById('reset-button');
+    const projectForm = document.getElementById('experience-form');
+    const filterPills = document.querySelectorAll('#categoryFilterContainer .filter-pill');
+
+    // Mengubah karakter khusus HTML menjadi entity agar aman dari XSS
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    // Membaca nilai cookie, digunakan untuk token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function closeProjectModal() {
+        const modal = document.getElementById("add-experience-modal");
+        if (modal && typeof modal.hidePopover === 'function') {
+            modal.hidePopover();
+        }
+    }
+
+    // Menyembunyikan/Menampilkan section halaman
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+        loadingState.classList.toggle('hide', !showLoading);
+        errorState.classList.toggle('hide', !showError);
+        emptyState.classList.toggle('hide', !showEmpty);
+        gridContainer.classList.toggle('hide', !showGrid);
+    }
+
+    // Membuat elemen item timeline experience
+    function buildProjectCardElement(item) {
+        const exp = item.fields;
+        const expId = item.pk;
+        const articleElement = document.createElement('article');
+        articleElement.className = 'timeline-item';
+
+        const deleteUrl = "{% url 'main:delete_experience' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', expId);
+        const editUrl = "{% url 'main:edit_experience' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', expId);
+        const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', expId);
+
+        const deleteHtml = IS_SUPERUSER ? `
+            <form method="post" action="${deleteUrl}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="button button-danger" onclick="return confirm('Yakin ingin menghapus experience ini?');">Hapus</button>
+            </form>` : '';
+
+        const editHtml = (IS_SUPERUSER || IS_EDITOR) ? `
+            <a href="${editUrl}" class="button button-secondary">Edit</a>
+        ` : '';
+
+        const isStarredClass = exp.is_starred ? " is-starred" : "";
+        const starText = exp.is_starred ? "Unstar" : "Star";
+        const starTitle = exp.star_count > 0 ? `Dibintangi oleh ${escapeHtml(exp.starred_by_names)}` : "Jadilah yang pertama memberi star";
+        const statusText = exp.is_ongoing ? "Ongoing" : (escapeHtml(exp.ended_at_display) + " (Completed)");
+        const companyHtml = exp.company ? `<p class="timeline-org">${escapeHtml(exp.company)}</p>` : '';
+        const thumbHtml = exp.thumbnail ? `<div style="margin-top:0.75rem;"><img src="${escapeHtml(exp.thumbnail)}" alt="Thumbnail ${escapeHtml(exp.title)}" style="max-height:160px; border-radius:8px; border:1px solid var(--line);"></div>` : '';
+
+        const completeCardHtml = `
+            <div class="timeline-marker"></div>
+            <div class="timeline-meta">
+                <time class="timeline-date">
+                    ${escapeHtml(exp.started_at_display)} — ${statusText}
+                </time>
+                <span class="timeline-tag">${escapeHtml(exp.category_display || exp.category)}</span>
+            </div>
+
+            <h2 class="timeline-role">${escapeHtml(exp.title)}</h2>
+            ${companyHtml}
+            <p class="timeline-desc">${escapeHtml(exp.description)}</p>
+            ${thumbHtml}
+
+            <div class="experience-card-actions" style="margin-top:1rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <form method="post" action="${starUrl}" class="star-form" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-star${isStarredClass}" title="${starTitle}">
+                        <span aria-hidden="true">★</span> ${starText}
+                        <span class="star-count">${exp.star_count}</span>
+                    </button>
+                </form>
+                ${editHtml}
+                ${deleteHtml}
+            </div>
+        `;
+
+        articleElement.innerHTML = completeCardHtml;
+        return articleElement;
+    }
+
+    // Fetch data via AJAX
+    async function fetchProjects(searchQuery = "", categoryQuery = currentCategory) {
+        if (projectsAbortController) projectsAbortController.abort();
+        projectsAbortController = new AbortController();
+
+        try {
+            displayPageSection({ showLoading: true });
+            const params = new URLSearchParams();
+            if (searchQuery) params.append("title", searchQuery);
+            if (categoryQuery && categoryQuery !== "all") params.append("category", categoryQuery);
+
+            const queryString = params.toString();
+            const url = queryString ? `${BASE_PROJECTS_ENDPOINT}?${queryString}` : BASE_PROJECTS_ENDPOINT;
+
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                signal: projectsAbortController.signal,
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch data');
+            const projectData = await response.json();
+
+            if (projectData.length === 0) {
+                displayPageSection({ showEmpty: true });
+            } else {
+                gridContainer.innerHTML = '';
+                projectData.forEach(item => {
+                    gridContainer.appendChild(buildProjectCardElement(item));
+                });
+                displayPageSection({ showGrid: true });
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('Error loading experiences:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+
+    // Debounce search logic
+    function searchProjects() {
+        fetchProjects(searchInput.value.trim(), currentCategory);
+    }
+
+    searchInput.addEventListener("input", function() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(function() {
+            searchProjects();
+        }, SEARCH_DEBOUNCE_DELAY);
+    });
+
+    searchForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        clearTimeout(searchDebounceTimer);
+        searchProjects();
+    });
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", function() {
+            searchInput.value = "";
+            currentCategory = "all";
+            filterPills.forEach(pill => pill.classList.toggle('active', pill.dataset.category === 'all'));
+            clearTimeout(searchDebounceTimer);
+            fetchProjects("", "all");
+        });
+    }
+
+    filterPills.forEach(pill => {
+        pill.addEventListener("click", function() {
+            filterPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            currentCategory = this.dataset.category;
+            fetchProjects(searchInput.value.trim(), currentCategory);
+        });
+    });
+
+    // Mengirim form data via AJAX
+    async function addProject(event) {
+        event.preventDefault();
+        const submitButton = projectForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(CREATE_PROJECT_ENDPOINT, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: new FormData(projectForm),
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                projectForm.reset();
+                closeProjectModal();
+                showToast('Berhasil', 'Pengalaman baru berhasil ditambahkan!', 'success');
+                fetchProjects(searchInput.value.trim(), currentCategory);
+            } else {
+                const errorMessages = result.errors 
+                    ? Object.values(result.errors).flat().map(err => err.message)
+                    : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+                showToast('Gagal menambahkan pengalaman', errorMessages.join(' '), 'error');
+            }
+        } catch (error) {
+            console.error('Error adding experience:', error);
+            showToast('Gagal menambahkan pengalaman', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    if (projectForm) {
+        projectForm.addEventListener('submit', addProject);
+    }
+
+    // Start application
+    fetchProjects(searchInput.value.trim(), currentCategory);
+</script>
+{% endblock content %}
