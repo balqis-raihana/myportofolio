@@ -149,7 +149,7 @@ def create_experience(request):
 def create_experience_ajax(request):
     if not request.user.is_superuser:
         return JsonResponse(
-            {"message": "Hanya pemilik portofolio yang dapat menambahkan proyek."},
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan pengalaman."},
             status=403,
         )
     form = ExperienceForm(request.POST)

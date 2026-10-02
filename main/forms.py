@@ -65,7 +65,7 @@ class ExperienceForm(ModelForm):
     def clean_title(self):
         title = strip_tags(self.cleaned_data.get("title", "")).strip()
         if not title:
-            raise ValidationError("Nama proyek tidak boleh hanya berisi tag HTML.")
+            raise ValidationError("Judul pengalaman tidak boleh hanya berisi tag HTML.")
         return title
 
     def clean_company(self):
@@ -139,3 +139,27 @@ class CourseworkForm(ModelForm):
                 }
             ),
         }
+
+    def clean_name(self):
+        name = strip_tags(self.cleaned_data.get("name", "")).strip()
+        if not name:
+            raise ValidationError("Nama mata kuliah tidak boleh hanya berisi tag HTML.")
+        return name
+
+    def clean_category(self):
+        category = strip_tags(self.cleaned_data.get("category", "")).strip()
+        if not category:
+            raise ValidationError("Kategori tidak boleh hanya berisi tag HTML.")
+        return category
+
+    def clean_description(self):
+        description = strip_tags(self.cleaned_data.get("description", "")).strip()
+        if not description:
+            raise ValidationError("Deskripsi tidak boleh hanya berisi tag HTML.")
+        return description
+
+    def clean_journal(self):
+        journal = self.cleaned_data.get("journal")
+        if journal:
+            return strip_tags(journal).strip()
+        return journal

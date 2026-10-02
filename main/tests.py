@@ -876,4 +876,63 @@ class StarFeatureTests(TestCase):
         self.assertIn(["star_user1"], starred_field)
 
 
+# ===========================================================================
+# 10. FORM CLEANING & XSS SANITIZATION TESTS
+# ===========================================================================
+
+class FormSanitizationTests(TestCase):
+
+    def test_experience_form_strips_xss_tags(self):
+        data = {
+            "title": "Software Engineer <b>Lead</b>",
+            "company": "Tech Corp <img src=x onerror=alert(1)>",
+            "description": "Led backend services <b>bold</b>",
+            "category": "full-time",
+        }
+        form = ExperienceForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        exp = form.save()
+        self.assertEqual(exp.title, "Software Engineer Lead")
+        self.assertEqual(exp.company, "Tech Corp")
+        self.assertEqual(exp.description, "Led backend services bold")
+
+    def test_experience_form_rejects_only_html_tags_in_title(self):
+        data = {
+            "title": "   <b></b><i></i><img src=x>  ",
+            "description": "Valid description",
+            "category": "full-time",
+        }
+        form = ExperienceForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("title", form.errors)
+
+    def test_coursework_form_strips_xss_tags(self):
+        data = {
+            "name": "Cloud Computing <b>Advanced</b>",
+            "category": "Distributed Systems <img src=x onerror=alert(2)>",
+            "description": "AWS, GCP, Kubernetes <i>Cloud</i>",
+            "credits": 3,
+            "journal": "Week 1: Setup Terraform <iframe></iframe>",
+        }
+        form = CourseworkForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        cw = form.save()
+        self.assertEqual(cw.name, "Cloud Computing Advanced")
+        self.assertEqual(cw.category, "Distributed Systems")
+        self.assertEqual(cw.description, "AWS, GCP, Kubernetes Cloud")
+        self.assertEqual(cw.journal, "Week 1: Setup Terraform")
+
+    def test_coursework_form_rejects_only_html_tags_in_name(self):
+        data = {
+            "name": "<img src='x' onerror='alert(\"XSS!\")'>",
+            "category": "Software",
+            "description": "Valid description",
+            "credits": 3,
+        }
+        form = CourseworkForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("name", form.errors)
+
+
+
 
