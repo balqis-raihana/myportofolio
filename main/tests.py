@@ -934,5 +934,87 @@ class FormSanitizationTests(TestCase):
         self.assertIn("name", form.errors)
 
 
+# ===========================================================================
+# 11. AJAX INTERACTION & JSON TESTS (INDIVIDUAL ASSIGNMENT 5)
+# ===========================================================================
+
+class AjaxInteractionTests(TestCase):
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(username="admin_ajax", password="pwd")
+        self.editor = User.objects.create_user(username="editor_ajax", password="pwd")
+        editor_group, _ = Group.objects.get_or_create(name="Editor")
+        self.editor.groups.add(editor_group)
+        self.regular = User.objects.create_user(username="regular_ajax", password="pwd")
+
+        self.exp = make_experience(title="Fullstack Developer")
+        self.cw = make_coursework(name="Distributed Systems", category="Systems")
+
+    def test_get_experience_json_includes_star_data(self):
+        self.exp.starred_by.add(self.superuser)
+        self.client.login(username="admin_ajax", password="pwd")
+
+        response = self.client.get(reverse("main:get_experience_json"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, list)
+        self.assertGreaterEqual(len(data), 1)
+
+        exp_fields = data[0]["fields"]
+        self.assertEqual(exp_fields["star_count"], 1)
+        self.assertTrue(exp_fields["is_starred"])
+        self.assertIn("admin_ajax", exp_fields["starred_by_names"])
+
+    def test_get_coursework_json_structure_and_search(self):
+        response = self.client.get(reverse("main:get_coursework_json") + "?search=Distributed")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["fields"]["name"], "Distributed Systems")
+
+    def test_create_experience_ajax_superuser_201(self):
+        self.client.login(username="admin_ajax", password="pwd")
+        data = {
+            "title": "AI Researcher",
+            "company": "Fasilkom Lab",
+            "description": "Deep learning research.",
+            "category": "research",
+        }
+        response = self.client.post(reverse("main:create_experience_ajax"), data)
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Experience.objects.filter(title="AI Researcher").exists())
+
+    def test_create_experience_ajax_forbidden_for_regular_user_403(self):
+        self.client.login(username="regular_ajax", password="pwd")
+        data = {"title": "Attempted Hack"}
+        response = self.client.post(reverse("main:create_experience_ajax"), data)
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_coursework_ajax_superuser_201(self):
+        self.client.login(username="admin_ajax", password="pwd")
+        data = {
+            "name": "Machine Learning",
+            "category": "Data & AI",
+            "description": "Supervised and unsupervised models.",
+            "credits": 3,
+        }
+        response = self.client.post(reverse("main:create_coursework_ajax"), data)
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Coursework.objects.filter(name="Machine Learning").exists())
+
+    def test_create_coursework_ajax_validation_error_400(self):
+        self.client.login(username="admin_ajax", password="pwd")
+        response = self.client.post(reverse("main:create_coursework_ajax"), {})
+        self.assertEqual(response.status_code, 400)
+        res_json = response.json()
+        self.assertIn("errors", res_json)
+
+    def test_create_coursework_ajax_forbidden_for_regular_user_403(self):
+        self.client.login(username="regular_ajax", password="pwd")
+        response = self.client.post(reverse("main:create_coursework_ajax"), {"name": "Hacked"})
+        self.assertEqual(response.status_code, 403)
+
+
+
 
 

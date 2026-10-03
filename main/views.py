@@ -262,30 +262,63 @@ def toggle_star(request, experience_id):
 
 
 def get_coursework_json(request):
+    search_query = request.GET.get("search", "").strip() or request.GET.get("name", "").strip()
     category_query = request.GET.get("category", "").strip()
-    coursework = Coursework.objects.all()
+    courseworks = Coursework.objects.all().order_by("name")
 
+    if search_query:
+        courseworks = courseworks.filter(name__icontains=search_query)
     if category_query and category_query != "all":
-        coursework = coursework.filter(category__icontains=category_query)
+        courseworks = courseworks.filter(category__icontains=category_query)
 
-    coursework_json = serializers.serialize("json", coursework)
-    return HttpResponse(coursework_json, content_type="application/json")
+    data = []
+    for cw in courseworks:
+        data.append({
+            "pk": str(cw.id),
+            "fields": {
+                "name": cw.name,
+                "category": cw.category,
+                "description": cw.description,
+                "credits": cw.credits,
+                "journal": cw.journal,
+            }
+        })
+    return JsonResponse(data, safe=False)
+
+
+@require_POST
+def create_coursework_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan mata kuliah."},
+            status=403,
+        )
+    form = CourseworkForm(request.POST)
+    if form.is_valid():
+        coursework = form.save()
+        return JsonResponse(
+            {"message": "Mata kuliah berhasil ditambahkan.", "pk": str(coursework.id)},
+            status=201,
+        )
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
 
 
 def show_coursework(request):
-    json_response = get_coursework_json(request)
-    coursework_deserialized = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-    coursework_list = [item.object for item in coursework_deserialized]
     category_query = request.GET.get("category", "").strip()
+    search_query = request.GET.get("search", "").strip() or request.GET.get("name", "").strip()
+    coursework_list = Coursework.objects.all().order_by("name")
+    if search_query:
+        coursework_list = coursework_list.filter(name__icontains=search_query)
+    if category_query and category_query != "all":
+        coursework_list = coursework_list.filter(category__icontains=category_query)
 
     context = {
         "name": "Balqis Raihana",
         "coursework_list": coursework_list,
         "category_query": category_query,
+        "search_query": search_query,
         "is_editor": is_editor(request.user),
+        "form": CourseworkForm(),
     }
     return render(request, "coursework.html", context)
 
