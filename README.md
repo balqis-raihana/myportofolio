@@ -148,3 +148,71 @@ Kendala, keterbatasan, dan validasi mandiri:
 - AI sempat menempatkan tombol aksi pada kartu list awal yang membungkus link secara bersarang (*nested interactive elements*), sehingga saya meminta penyesuaian agar kartu tetap dapat diklik secara bersih dan tombol CRUD dipindahkan ke dalam subpage detail course.
 - Terdapat ketidaksesuaian ukuran antara tombol Edit dan Delete di mana tombol Edit sempat mewarisi styling tombol global yang terlalu besar. Saya mengarahkan perbaikan CSS spesifik agar kedua tombol memiliki ukuran yang kompak dan berdampingan (*adjacent*) seperti pada halaman Experience.
 - Seluruh logika, struktur form, endpoints URL, serta hasil eksekusi pengujian (`python manage.py test`) saya periksa dan jalankan langsung di terminal lokal untuk memastikan tidak ada error/masalah dan proyek berjalan tanpa error.
+
+---
+
+## Tugas 5
+
+### 1. Jelaskan apa itu debouncing dan mengapa teknik ini penting diterapkan pada fitur pencarian yang menggunakan AJAX!
+
+**Debouncing** adalah teknik optimasi pemrograman untuk menunda eksekusi suatu fungsi sampai pengguna berhenti melakukan aksi (atau jeda aktivitas) selama rentang waktu tertentu. Jika pengguna kembali melakukan aksi sebelum waktu tunggu habis, *timer* hitung mundur akan di-*reset* ulang dari awal.
+
+Pada fitur pencarian berbasis AJAX di mana kita memasang *event listener* `input` pada *search box*:
+- **Tanpa debouncing:** Setiap satu ketukan huruf oleh pengguna (misalnya mengetik `"algoritma"`, yaitu 9 karakter) akan langsung memicu `fetch()` sebanyak 9 kali secara berturut-turut ke server.
+- **Dengan debouncing:** Kita memberikan jeda waktu tunggu (misalnya 300 ms). Browser baru akan mengirimkan permintaan `fetch()` ke endpoint JSON setelah pengguna benar-benar berhenti mengetik selama 300 ms.
+
+**Mengapa teknik ini sangat penting diterapkan:**
+1. **Mengurangi Beban Server & Basis Data (*Server Load*):** Mencegah server dibanjiri puluhan HTTP request yang tidak perlu dan eksekusi query pencarian database (seperti `icontains` atau `LIKE`) secara berlebihan dalam hitungan detik.
+2. **Menghemat Bandwidth Jaringan:** Data yang dikirim dan diterima melalui jaringan menjadi jauh lebih efisien karena hanya kata kunci akhir yang dicari.
+3. **Mencegah Masalah *Race Condition*:** Request yang dikirim belakangan belum tentu selesai belakangan di jaringan. Tanpa debouncing, response dari kata yang diketik lebih awal bisa saja sampai ke browser setelah response dari kata terakhir, sehingga hasil pencarian yang tampil di layar menjadi salah atau tidak sinkron.
+
+### 2. Jelaskan fungsi dari penggunaan await ketika kita menggunakan fetch()! Apa yang akan terjadi jika kita tidak menggunakan await?
+
+**Fungsi `await` ketika menggunakan `fetch()`:**
+Kata kunci `await` digunakan di dalam fungsi `async` untuk menjeda (*pause*) eksekusi baris kode berikutnya sampai *Promise* yang dihasilkan oleh fungsi asinkron (seperti `fetch()`) selesai diproses (*resolved*), lalu langsung mengekstrak nilai hasilnya (yaitu objek `Response`).
+
+**Apa yang akan terjadi jika kita tidak menggunakan `await`:**
+1. **Mendapatkan objek *Promise*, bukan objek `Response`:**
+   Jika kita menulis `const res = fetch(url);` tanpa `await`, variabel `res` tidak akan berisi data response dari server, melainkan sebuah objek `Promise { <pending> }`.
+2. **Error saat memanggil method pembaca data:**
+   Jika kita langsung mencoba memanggil `res.json()` atau membaca properti `res.ok`, kode JavaScript akan melempar error (seperti `res.json is not a function` atau `Cannot read properties of undefined`) karena objek `Promise` yang belum selesai tidak memiliki properti-properti tersebut.
+3. **Kode berjalan mendahului data (*Timing Issue*):**
+   Eksekusi kode JavaScript akan langsung melompat ke baris-baris berikutnya sebelum data berhasil diambil dari server. Akibatnya, elemen antarmuka (DOM) akan mencoba merender data yang masih kosong (`undefined`), menyebabkan tampilan *loading* atau kartu data menjadi rusak.
+
+*(Alternatif tanpa `await` adalah menggunakan pola chaining `.then()` dan `.catch()`, namun penulisan dengan `async/await` jauh lebih mudah dibaca secara sekuensial dan terhindar dari callback hell).*
+
+### 3. Jelaskan apa itu serangan XSS (Cross-Site Scripting) dan mengapa data yang ditampilkan melalui AJAX/JavaScript lebih rentan terhadap serangan ini daripada data yang ditampilkan langsung melalui template Django!
+
+**Apa itu serangan XSS (Cross-Site Scripting):**
+**Cross-Site Scripting (XSS)** adalah kerentanan keamanan web di mana penyerang (*attacker*) berhasil menyisipkan skrip berbahaya (biasanya berupa kode JavaScript jahat, tag `<script>`, atribut event seperti `<img src="x" onerror="alert(1)">`, atau link `javascript:...`) ke dalam konten yang disimpan atau ditampilkan oleh aplikasi web. Ketika pengguna lain membuka halaman tersebut, browser akan mengeksekusi skrip tersebut secara otomatis karena menganggapnya sebagai bagian resmi dari website. Dampaknya bisa berupa pencurian token/cookie sesi, pembajakan akun pengguna, *defacement*, hingga *redirect* ke situs berbahaya.
+
+**Mengapa data via AJAX/JavaScript lebih rentan dibandingkan template Django:**
+1. **Auto-Escaping Otomatis pada Template Django:**
+   Secara *default*, sistem template Django (Django Template Language / DTL) memiliki mekanisme **auto-escaping** aktif. Ketika kita menulis variabel seperti `{{ coursework.name }}`, karakter berbahaya HTML akan otomatis diubah menjadi *safe character entities* (misalnya `<` menjadi `&lt;`, `>` menjadi `&gt;`, dan `"` menjadi `&quot;`). Skrip berbahaya akan tampil sebagai teks biasa di browser dan tidak dieksekusi.
+2. **JavaScript Tidak Memiliki Auto-Escaping Bawaan:**
+   Saat kita menerima data JSON via AJAX (misalnya dari `fetch()`) dan merendernya ke tampilan menggunakan manipulasi DOM seperti:
+   ```javascript
+   card.innerHTML = `<h2>${cw.name}</h2>`;
+   ```
+   Browser langsung mem-parsing teks mentah tersebut sebagai markup HTML murni. Jika `cw.name` mengandung tag HTML atau skrip jahat, browser akan langsung menjalankannya saat itu juga.
+3. **Ketergantungan pada Sanitasi Manual Developer:**
+   Pada AJAX, developer bertanggung jawab sendiri untuk melakukan sanitasi ganda:
+   - Di sisi **klien**: Harus secara eksplisit melakukan *escaping* string (menggunakan helper `escapeHtml()`) atau menggunakan property aman seperti `element.textContent` alih-alih `element.innerHTML`.
+   - Di sisi **server**: Harus membersihkan input form menggunakan `strip_tags()` pada method `clean_<field>` di `ModelForm` sebelum data tersimpan di database.
+
+### AI Disclosures for Tugas 5
+
+Dalam pengerjaan Tugas 5, saya menggunakan Gemini sebagai asisten pair-programming untuk membantu perancangan fitur AJAX, penanganan asinkron JavaScript, serta implementasi pertahanan terhadap XSS.
+
+AI membantu saya dalam:
+- Menyusun endpoint JSON (`get_coursework_json` dan `get_experience_json`) yang dikonstruksi secara manual melalui `JsonResponse` dengan menyertakan metadata relasi (seperti status dan total star).
+- Mengimplementasikan alur Fetch API asinkron pada halaman Coursework dan Experience dengan penanganan state lengkap (*loading*, *error*, dan *empty state*).
+- Menerapkan fitur live search dengan debouncing (300 ms) dan filter kategori berbasis pill tanpa me-reload halaman.
+- Membuat modal penambahan data coursework via AJAX (`create_coursework_ajax`) dengan validasi `ModelForm`, proteksi token CSRF, dan notifikasi toast popover.
+- Mengimplementasikan pertahanan XSS berlapis: sanitasi server-side menggunakan `strip_tags()` pada method `clean_*` di `forms.py`, serta escaping karakter HTML berbahaya pada JavaScript di sisi klien (`escapeHtml`).
+- Menyusun unit test komprehensif di `main/tests.py` (`AjaxInteractionTests` dan `FormSanitizationTests`) untuk memverifikasi fungsionalitas AJAX dan sanitasi input form.
+
+Kendala, keterbatasan, dan validasi mandiri:
+- Saya memastikan agar elemen yang hanya ada untuk role tertentu (seperti modal superuser) diperiksa keberadaannya terlebih dahulu sebelum memasang *event listener* di JavaScript agar tidak menghasilkan `null error`.
+- Saya menguji langsung proteksi XSS dengan menyisipkan tag skrip dan atribut *event handler* (`<img src=x onerror=alert(1)>`) untuk memverifikasi bahwa tag tersebut berhasil dibersihkan di server dan lolos uji sanitasi.
+- Seluruh kode, fungsi view, rute URLs, dan pengujian unit test telah saya jalankan dan verifikasi secara mandiri melalui terminal lokal untuk memastikan tidak ada kesalahan saat dieksekusi.
