@@ -40,7 +40,7 @@ jobs:
           CRUD_SECRET_KEY: JamesBond007
           PRODUCTION: 'False'
         run: |
-          python manage.py test contacts
+          python manage.py test main.tests_api contacts
 
   deploy:
     name: Push to PWS
