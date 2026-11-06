@@ -20,7 +20,6 @@ class Experience(models.Model):
     description = models.TextField()
     category = models.CharField(max_length=20, choices=EXPERIENCE_CHOICES, default='full-time')
     thumbnail = models.URLField(blank=True, null=True)
-    # Namun untuk tugas dan proyek mandiri selanjutnya, kamu sebaiknya menggunakan blank=True (atau blank=True, default=""). Jika kamu sudah terlanjur menjalankan migrasi sesuai kode di atas, kamu tidak perlu mengubahnya atau melakukan migrasi ulang karena keduanya tetap berfungsi dengan baik pada tutorial ini.
     started_at = models.DateTimeField(default=timezone.now)
     ended_at = models.DateTimeField(blank=True, null=True)
     starred_by = models.ManyToManyField(
@@ -41,6 +40,9 @@ class Coursework(models.Model):
     description = models.TextField()
     credits = models.IntegerField(default=3)
     journal = models.TextField(blank=True, null=True)
+    starred_by = models.ManyToManyField(
+        User, related_name="starred_coursework", blank=True
+    )
 
     def __str__(self):
         return self.name
