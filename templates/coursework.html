@@ -68,19 +68,7 @@
             </div>
 
             <!-- Grid Container via AJAX -->
-            <div id="coursework-grid" class="coursework-grid">
-                {% for course in coursework_list %}
-                    <a href="{% url 'main:show_coursework_detail' course.id %}" class="course-card-link">
-                        <article class="course-card">
-                            <span class="course-tag">{{ course.category }}</span>
-                            <h2 class="course-name">{{ course.name }}</h2>
-                            <p class="course-desc">{{ course.description }}</p>
-                        </article>
-                    </a>
-                {% empty %}
-                    <p class="empty-state">No coursework added yet.</p>
-                {% endfor %}
-            </div>
+            <div id="coursework-grid" class="coursework-grid"></div>
         </div>
     </section>
 </main>
@@ -89,10 +77,19 @@
     {% include "components/coursework_form_modal.html" %}
 {% endif %}
 
+{% if user.is_superuser or is_editor %}
+    {% include "components/coursework_edit_modal.html" %}
+{% endif %}
+
+{% csrf_token %}
 <script>
-    // Konfigurasi Endpoint & State
-    const BASE_COURSEWORK_ENDPOINT = "{% url 'main:get_coursework_json' %}";
-    const CREATE_COURSEWORK_ENDPOINT = "{% url 'main:create_coursework_ajax' %}";
+    // Konfigurasi Endpoint & State (DRF REST API)
+    const BASE_COURSEWORK_ENDPOINT = "{% url 'api:coursework-list' %}";
+    const DETAIL_COURSEWORK_ENDPOINT = "{% url 'api:coursework-detail' '00000000-0000-0000-0000-000000000000' %}";
+    const STAR_COURSEWORK_ENDPOINT = "{% url 'api:coursework-star' '00000000-0000-0000-0000-000000000000' %}";
+    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+    const IS_EDITOR = "{{ is_editor|yesno:'true,false' }}" === "true";
+    const IS_AUTHENTICATED = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
     const SEARCH_DEBOUNCE_DELAY = 300;
 
     let courseworkAbortController;
@@ -108,6 +105,7 @@
     const cwSearchInput = document.getElementById('coursework-search-input');
     const cwResetBtn = document.getElementById('coursework-reset-button');
     const cwForm = document.getElementById('coursework-form');
+    const cwEditForm = document.getElementById('edit-coursework-form');
     const cwFilterPills = document.querySelectorAll('#courseworkCategoryFilterContainer .filter-pill');
 
     // Escaping karakter khusus HTML agar aman dari XSS
@@ -118,6 +116,10 @@
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
+    }
+
+    function courseworkEndpoint(pattern, id) {
+        return pattern.replace('00000000-0000-0000-0000-000000000000', id);
     }
 
     // Membaca token CSRF dari cookie
@@ -143,7 +145,13 @@
         }
     }
 
-    // Tampilkan / sembunyikan section
+    function closeEditCourseworkModal() {
+        const modal = document.getElementById("edit-coursework-modal");
+        if (modal && typeof modal.hidePopover === 'function') {
+            modal.hidePopover();
+        }
+    }
+
     function displayCourseworkSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
         if (cwLoadingState) cwLoadingState.classList.toggle('hide', !showLoading);
         if (cwErrorState) cwErrorState.classList.toggle('hide', !showError);
@@ -151,48 +159,97 @@
         if (cwGridContainer) cwGridContainer.classList.toggle('hide', !showGrid);
     }
 
-    // Bangun elemen kartu Coursework
-    function buildCourseworkCardElement(item) {
-        const cw = item.fields;
-        const cwId = item.pk;
-
-        const linkElement = document.createElement('a');
-        const detailUrl = "{% url 'main:show_coursework_detail' '00000000-0000-0000-0000-000000000000' %}"
-            .replace('00000000-0000-0000-0000-000000000000', cwId);
-
-        linkElement.href = detailUrl;
-        linkElement.className = 'course-card-link';
-
-        linkElement.innerHTML = `
-            <article class="course-card">
-                <span class="course-tag">${escapeHtml(cw.category)}</span>
-                <h2 class="course-name">${escapeHtml(cw.name)}</h2>
-                <p class="course-desc">${escapeHtml(cw.description)}</p>
-            </article>
-        `;
-        return linkElement;
+    function apiErrorMessage(data, status) {
+        const messages = Object.values(data).flat().filter(value => typeof value === 'string');
+        return messages.join(' ') || `Request failed (HTTP ${status}).`;
     }
 
-    // Mengambil data Coursework via AJAX
+    async function writeCourseworkApi(url, method, payload) {
+        const response = await fetch(url, {
+            method,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: payload === undefined ? undefined : JSON.stringify(payload),
+        });
+
+        if (response.status === 204) return null;
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+        return data;
+    }
+
+    // Bangun elemen kartu Coursework dari objek REST API
+    function buildCourseworkCardElement(cw) {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'course-card-wrapper';
+
+        const detailUrl = "{% url 'main:show_coursework_detail' '00000000-0000-0000-0000-000000000000' %}"
+            .replace('00000000-0000-0000-0000-000000000000', cw.id);
+
+        const deleteHtml = IS_SUPERUSER ? `
+            <button type="button" class="button button-danger" data-action="delete" data-id="${escapeHtml(cw.id)}">Hapus</button>
+        ` : '';
+
+        const editHtml = (IS_SUPERUSER || IS_EDITOR) ? `
+            <button type="button" class="button button-secondary" data-action="edit" data-id="${escapeHtml(cw.id)}"
+                    data-name="${escapeHtml(cw.name)}"
+                    data-category="${escapeHtml(cw.category)}"
+                    data-credits="${escapeHtml(cw.credits)}"
+                    data-description="${escapeHtml(cw.description)}"
+                    data-journal="${escapeHtml(cw.journal || '')}">Edit</button>
+        ` : '';
+
+        const starHtml = IS_AUTHENTICATED ? `
+            <button type="button" class="button button-star${cw.is_starred ? ' is-starred' : ''}" data-action="star" data-id="${escapeHtml(cw.id)}" title="${escapeHtml(cw.starred_by_names)}">
+                <span aria-hidden="true">★</span> ${cw.is_starred ? 'Unstar' : 'Star'}
+                <span class="star-count">${cw.star_count}</span>
+            </button>
+        ` : `
+            <a href="{% url 'main:login' %}" class="button button-star">
+                <span aria-hidden="true">★</span> Login to star (${cw.star_count})
+            </a>
+        `;
+
+        cardWrapper.innerHTML = `
+            <article class="course-card">
+                <a href="${detailUrl}" class="course-card-link-inner" style="display:block; text-decoration:none; color:inherit;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="course-tag">${escapeHtml(cw.category)}</span>
+                        <span class="course-credits" style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(cw.credits)} SKS</span>
+                    </div>
+                    <h2 class="course-name" style="margin-top:0.5rem;">${escapeHtml(cw.name)}</h2>
+                    <p class="course-desc">${escapeHtml(cw.description)}</p>
+                </a>
+                <div class="coursework-card-actions" style="margin-top:1rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    ${starHtml}
+                    ${editHtml}
+                    ${deleteHtml}
+                </div>
+            </article>
+        `;
+        return cardWrapper;
+    }
+
+    // Mengambil data Coursework via AJAX (DRF GET)
     async function fetchCourseworks(searchQuery = "", categoryQuery = currentCourseworkCategory) {
         if (courseworkAbortController) courseworkAbortController.abort();
         courseworkAbortController = new AbortController();
 
         try {
             displayCourseworkSection({ showLoading: true });
-            const params = new URLSearchParams();
-            if (searchQuery) params.append("search", searchQuery);
-            if (categoryQuery && categoryQuery !== "all") params.append("category", categoryQuery);
-
-            const queryString = params.toString();
-            const url = queryString ? `${BASE_COURSEWORK_ENDPOINT}?${queryString}` : BASE_COURSEWORK_ENDPOINT;
+            const url = new URL(BASE_COURSEWORK_ENDPOINT, window.location.origin);
+            if (searchQuery) url.searchParams.set("search", searchQuery);
+            if (categoryQuery && categoryQuery !== "all") url.searchParams.set("category", categoryQuery);
 
             const response = await fetch(url, {
                 headers: { 'Accept': 'application/json' },
                 signal: courseworkAbortController.signal,
             });
 
-            if (!response.ok) throw new Error('Gagal memuat data dari server');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
 
             if (data.length === 0) {
@@ -209,6 +266,104 @@
             console.error('Error loading coursework:', error);
             displayCourseworkSection({ showError: true });
         }
+    }
+
+    // Event Delegation: Star, Edit, Delete
+    if (cwGridContainer) {
+        cwGridContainer.addEventListener('click', async function(event) {
+            const button = event.target.closest('button[data-action]');
+            if (!button || button.disabled) return;
+            const action = button.dataset.action;
+            const courseId = button.dataset.id;
+
+            if (action === 'edit') {
+                // Populate edit modal
+                document.getElementById('edit-cw-id').value = courseId;
+                document.getElementById('edit-cw-name').value = button.dataset.name;
+                document.getElementById('edit-cw-category').value = button.dataset.category;
+                document.getElementById('edit-cw-credits').value = button.dataset.credits;
+                document.getElementById('edit-cw-description').value = button.dataset.description;
+                document.getElementById('edit-cw-journal').value = button.dataset.journal;
+
+                const editModal = document.getElementById('edit-coursework-modal');
+                if (editModal && typeof editModal.showPopover === 'function') {
+                    editModal.showPopover();
+                }
+                return;
+            }
+
+            if (action === 'delete') {
+                if (!window.confirm('Yakin ingin menghapus coursework ini?')) return;
+                button.disabled = true;
+                try {
+                    const deleteUrl = courseworkEndpoint(DETAIL_COURSEWORK_ENDPOINT, courseId);
+                    await writeCourseworkApi(deleteUrl, 'DELETE');
+                    if (typeof showToast === 'function') {
+                        showToast('Berhasil', 'Coursework berhasil dihapus.', 'success');
+                    }
+                    fetchCourseworks(cwSearchInput.value.trim(), currentCourseworkCategory);
+                } catch (error) {
+                    if (typeof showToast === 'function') {
+                        showToast('Gagal menghapus coursework', error.message, 'error');
+                    }
+                } finally {
+                    button.disabled = false;
+                }
+                return;
+            }
+
+            if (action === 'star') {
+                button.disabled = true;
+                try {
+                    const starUrl = courseworkEndpoint(STAR_COURSEWORK_ENDPOINT, courseId);
+                    await writeCourseworkApi(starUrl, 'POST');
+                    if (typeof showToast === 'function') {
+                        showToast('Berhasil', 'Status star berhasil diperbarui.', 'success');
+                    }
+                    fetchCourseworks(cwSearchInput.value.trim(), currentCourseworkCategory);
+                } catch (error) {
+                    if (typeof showToast === 'function') {
+                        showToast('Gagal memberi star', error.message, 'error');
+                    }
+                } finally {
+                    button.disabled = false;
+                }
+            }
+        });
+    }
+
+    // Submit Edit Coursework (PUT/PATCH via DRF)
+    if (cwEditForm) {
+        cwEditForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const submitBtn = cwEditForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            const courseId = document.getElementById('edit-cw-id').value;
+            const payload = {
+                name: document.getElementById('edit-cw-name').value.trim(),
+                category: document.getElementById('edit-cw-category').value.trim(),
+                credits: parseInt(document.getElementById('edit-cw-credits').value, 10),
+                description: document.getElementById('edit-cw-description').value.trim(),
+                journal: document.getElementById('edit-cw-journal').value.trim(),
+            };
+
+            try {
+                const updateUrl = courseworkEndpoint(DETAIL_COURSEWORK_ENDPOINT, courseId);
+                await writeCourseworkApi(updateUrl, 'PUT', payload);
+                closeEditCourseworkModal();
+                if (typeof showToast === 'function') {
+                    showToast('Berhasil', 'Coursework berhasil diperbarui.', 'success');
+                }
+                fetchCourseworks(cwSearchInput.value.trim(), currentCourseworkCategory);
+            } catch (error) {
+                if (typeof showToast === 'function') {
+                    showToast('Gagal mengubah coursework', error.message, 'error');
+                }
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
     }
 
     // Debounce search
@@ -252,41 +407,33 @@
         });
     });
 
-    // Menambah data via AJAX Form Modal
+    // Menambah data via AJAX Form Modal (DRF POST)
     async function addCourseworkAjax(event) {
         event.preventDefault();
         const submitButton = cwForm.querySelector('button[type="submit"]');
         submitButton.disabled = true;
 
         try {
-            const response = await fetch(CREATE_COURSEWORK_ENDPOINT, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                body: new FormData(cwForm),
-            });
+            const formData = new FormData(cwForm);
+            const payload = {
+                name: formData.get("name") || "",
+                category: formData.get("category") || "",
+                description: formData.get("description") || "",
+                credits: parseInt(formData.get("credits") || 3, 10),
+                journal: formData.get("journal") || "",
+            };
 
-            const result = await response.json().catch(() => ({}));
-
-            if (response.ok) {
-                cwForm.reset();
-                closeCourseworkModal();
-                if (typeof showToast === 'function') {
-                    showToast('Berhasil', 'Mata kuliah baru berhasil ditambahkan!', 'success');
-                }
-                const q = cwSearchInput ? cwSearchInput.value.trim() : "";
-                fetchCourseworks(q, currentCourseworkCategory);
-            } else {
-                const errorMessages = result.errors
-                    ? Object.values(result.errors).flat().map(err => err.message)
-                    : [result.message || `Terjadi kesalahan (status ${response.status}).`];
-                if (typeof showToast === 'function') {
-                    showToast('Gagal menambahkan coursework', errorMessages.join(' '), 'error');
-                }
-            }
-        } catch (error) {
-            console.error('Error adding coursework:', error);
+            await writeCourseworkApi(BASE_COURSEWORK_ENDPOINT, 'POST', payload);
+            cwForm.reset();
+            closeCourseworkModal();
             if (typeof showToast === 'function') {
-                showToast('Gagal menambahkan coursework', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+                showToast('Berhasil', 'Mata kuliah baru berhasil ditambahkan!', 'success');
+            }
+            const q = cwSearchInput ? cwSearchInput.value.trim() : "";
+            fetchCourseworks(q, currentCourseworkCategory);
+        } catch (error) {
+            if (typeof showToast === 'function') {
+                showToast('Gagal menambahkan coursework', error.message, 'error');
             }
         } finally {
             submitButton.disabled = false;
@@ -296,5 +443,8 @@
     if (cwForm) {
         cwForm.addEventListener('submit', addCourseworkAjax);
     }
+
+    // Inisialisasi awal saat halaman dimuat
+    fetchCourseworks(cwSearchInput ? cwSearchInput.value.trim() : "", currentCourseworkCategory);
 </script>
 {% endblock content %}
