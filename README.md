@@ -216,3 +216,129 @@ Kendala, keterbatasan, dan validasi mandiri:
 - Saya memastikan agar elemen yang hanya ada untuk role tertentu (seperti modal superuser) diperiksa keberadaannya terlebih dahulu sebelum memasang *event listener* di JavaScript agar tidak menghasilkan `null error`.
 - Saya menguji langsung proteksi XSS dengan menyisipkan tag skrip dan atribut *event handler* (`<img src=x onerror=alert(1)>`) untuk memverifikasi bahwa tag tersebut berhasil dibersihkan di server dan lolos uji sanitasi.
 - Seluruh kode, fungsi view, rute URLs, dan pengujian unit test telah saya jalankan dan verifikasi secara mandiri melalui terminal lokal untuk memastikan tidak ada kesalahan saat dieksekusi.
+
+
+---
+
+## Tugas 6
+
+### 1. Jelaskan apa yang dimaksud dengan REST dan mengapa mengembalikan JSON saja belum cukup untuk menyebut sebuah API sebagai RESTful! Jelaskan pula perbedaan PUT dan PATCH beserta contoh kapan masing-masing sebaiknya digunakan!
+
+**Pengertian REST:**
+**REST (Representational State Transfer)** adalah sebuah gaya arsitektur (*architectural style*) untuk merancang antarmuka komunikasi sistem berbasis web (web API). REST bukan merupakan standar baku berupa pustaka (*library*), protokol khusus, ataupun format data tertentu. Tiga pilar utama dalam REST meliputi:
+1. **Resource-Oriented:** Data diperlakukan sebagai sumber daya (*resource*) yang diidentifikasi secara unik melalui URI/URL, bukan berdasarkan nama aksi (misalnya `/api/v1/coursework/` untuk kumpulan data dan `/api/v1/coursework/<uuid>/` untuk satu data spesifik).
+2. **HTTP Verbs/Methods sebagai Aksi:** Jenis tindakan ditentukan secara murni oleh HTTP method: `GET` untuk membaca, `POST` untuk membuat data baru, `PUT`/`PATCH` untuk memperbarui data, dan `DELETE` untuk menghapus data.
+3. **Stateless:** Setiap permintaan dari klien harus memuat seluruh informasi yang diperlukan oleh server untuk memprosesnya, sehingga server tidak bergantung pada *state* kontekstual dari permintaan sebelumnya.
+
+**Mengapa mengembalikan JSON saja belum tentu RESTful:**
+Format JSON hanyalah sebuah representasi serialisasi teks untuk bertukar data (*data-interchange format*). Sebuah API yang mengembalikan format JSON belum tentu RESTful apabila:
+- Masih menyertakan kata kerja/aksi di dalam URL (misalnya `POST /coursework/add/`, `GET /coursework/delete/`, atau `POST /get_all_data/`). Hal ini merupakan gaya **RPC (Remote Procedure Call)**, bukan REST.
+- Mengabaikan semantik HTTP status code dan HTTP method (misalnya menggunakan `POST` untuk semua jenis aksi, atau selalu mengembalikan status code `200 OK` meskipun terjadi kegagalan sistem dengan pesan error di dalam body JSON).
+- Tidak menerapkan pemisahan resource yang jelas atau mengabaikan prinsip negosiasi konten (*content negotiation*).
+
+**Perbedaan PUT dan PATCH beserta contoh penggunaannya:**
+
+| Aspek | `PUT` | `PATCH` |
+| :--- | :--- | :--- |
+| **Sifat Operasi** | Penggantian menyeluruh (*Full Replacement / Complete Update*) | Pembaruan sebagian (*Partial Update*) |
+| **Kelengkapan Payload** | Wajib mengirimkan seluruh atribut/field dari entitas resource yang diperbarui | Cukup mengirimkan atribut/field yang ingin diubah saja |
+| **Efek Field yang Dihilangkan** | Field yang tidak dikirimkan berisiko dikosongkan (*null* / default) atau menghasilkan validasi error 400 Bad Request jika field bersifat wajib | Field yang tidak disertakan dalam request akan tetap mempertahankan nilai lamanya di database |
+
+**Contoh Kapan Menggunakannya:**
+- **Contoh Penggunaan `PUT`:**
+  Ketika pengguna membuka form edit lengkap di modal atau halaman edit dan menekan "Simpan", seluruh field formulir (seperti `name`, `category`, `description`, `credits`, dan `journal`) dikirimkan kembali untuk menggantikan data lama secara utuh:
+  ```json
+  PUT /api/v1/coursework/<uuid>/
+  {
+      "name": "Database Systems",
+      "category": "Data Management",
+      "credits": 4,
+      "description": "Comprehensive study of SQL, normalization, and relational databases.",
+      "journal": "Studied ER diagrams and indexing."
+  }
+  ```
+- **Contoh Penggunaan `PATCH`:**
+  Ketika pengguna hanya ingin memperbarui satu nilai atribut tertentu saja (misalnya hanya mengganti jumlah SKS mata kuliah atau hanya memperbarui catatan jurnal mingguan):
+  ```json
+  PATCH /api/v1/coursework/<uuid>/
+  {
+      "credits": 4
+  }
+  ```
+  Dengan `PATCH`, server hanya mengubah nilai `credits`, sementara `name`, `category`, dan deskripsi lainnya tetap utuh tanpa perlu dikirim ulang oleh klien.
+
+---
+
+### 2. Jelaskan peran serializer pada Django REST Framework! Apa keuntungannya dibandingkan merakit dictionary secara manual dengan JsonResponse seperti pada Tutorial 05?
+
+**Peran Serializer pada Django REST Framework:**
+Serializer pada DRF bertindak sebagai jembatan dua arah (*two-way converter*) antara data kompleks di sisi Django (seperti objek model ORM dan QuerySet) dengan format data representasi yang siap ditransmisikan melalui jaringan (seperti JSON/XML):
+1. **Serialisasi (Serialization - Model ke JSON):** Mengubah instance model Django ke tipe data Python primitif (seperti dictionary, list, string, integer) yang kemudian dirender oleh DRF menjadi representasi JSON untuk dikirimkan kepada klien pada request `GET`.
+2. **Deserialisasi & Validasi (Deserialization - JSON ke Model):** Menerima data JSON mentah dari request klien (`request.data`) pada request `POST`/`PUT`/`PATCH`, memvalidasi tipe dan aturan integritas datanya melalui method `.is_valid()`, lalu mengonversinya menjadi objek Python tervalidasi (`.validated_data`) yang siap disimpan ke database via `.save()`.
+3. **Penyajian Data Dinamis (Calculated Fields):** Melalui `SerializerMethodField`, serializer dapat menghitung data dinamis tambahan yang tidak tersimpan langsung sebagai kolom tabel database, seperti `star_count` (jumlah total star) dan `is_starred` (apakah user yang sedang login sudah memberi star).
+
+**Keuntungan Menggunakan Serializer Dibandingkan Merakit Dictionary Manual via `JsonResponse`:**
+- **Validasi Data Otomatis & Terpusat:** Pada Tutorial 05, validasi harus dilakukan secara terpisah melalui `ModelForm` atau pemeriksaan manual `if-else`. Serializer menyediakan validasi bawaan berbasis model sekaligus mendukung validasi kustom tingkat field (`validate_<field>`) dan tingkat objek (`validate`), serta otomatis mengembalikan struktur pesan error terstandardisasi dengan status code `400 Bad Request`.
+- **Mencegah Duplikasi Kode (*DRY - Don't Repeat Yourself*):** `ModelSerializer` secara otomatis mengenali definisi field, tipe data, batasan panjang (`max_length`), dan status nullability dari model Django, sehingga kita tidak perlu menulis ulang pemetaan kamus secara berulang-ulang untuk setiap view.
+- **Konsistensi Kontrak API:** Kontrak field yang diekspos kepada publik didefinisikan secara eksplisit pada atribut `fields` dan `read_only_fields`, mencegah ketidaksengajaan terpaparnya data sensitif (seperti password hash atau email pengguna).
+- **Mendukung Fitur Lanjutan DRF:** Serializer terintegrasi langsung dengan ekosistem DRF lainnya, seperti *content negotiation* (Browsable API vs JSON murni), parser data otomatis, dan pagination.
+
+---
+
+### 3. Jelaskan perbedaan autentikasi dan otorisasi pada Django REST Framework! Mengapa hak akses harus diperiksa dengan permission class di server, bukan hanya dengan menyembunyikan tombol di template?
+
+**Perbedaan Autentikasi dan Otorisasi pada DRF:**
+- **Autentikasi (Authentication - *"Who are you?"*):**
+  Proses untuk mengidentifikasi dan memverifikasi identitas pengguna yang mengirimkan request. Di DRF, mekanisme ini dijalankan oleh *authentication classes* (misalnya `SessionAuthentication` yang membaca session cookie). Hasil dari autentikasi adalah mengisi atribut `request.user` dengan objek akun pengguna yang valid atau menjadikannya `AnonymousUser` jika tidak ada kredensial valid yang disertakan. Autentikasi tidak memutuskan apakah pengguna boleh melakukan suatu aksi atau tidak.
+- **Otorisasi (Authorization / Permissions - *"What are you allowed to do?"*):**
+  Proses untuk memeriksa apakah pengguna yang telah teridentifikasi memiliki hak akses atau izin (*permission*) untuk menjalankan tindakan tertentu terhadap resource yang dituju. Di DRF, otorisasi ditangani oleh *permission classes* (misalnya `IsAuthenticated`, `IsPortfolioOwnerOrReadOnly`, atau `IsPortfolioOwnerOrEditorOrReadOnly`). Jika pengguna tidak memenuhi kriteria izin, request langsung dipotong dengan response error `403 Forbidden`.
+
+**Mengapa hak akses harus diperiksa di server (permission class), bukan hanya menyembunyikan tombol di template:**
+1. **Pemeriksaan di Sisi Klien/Template Bersifat Kosmetik:**
+   Kondisi `{% if user.is_superuser %}` pada template hanya mengatur apakah suatu elemen visual (seperti tombol "Tambah", "Edit", atau "Hapus") ditampilkan atau disembunyikan di layar browser pengguna.
+2. **Klien Dapat Memanipulasi Antarmuka Browser:**
+   Pengguna dengan pengetahuan teknis dapat dengan mudah memunculkan kembali tombol yang disembunyikan menggunakan fitur *Inspect Element* / Developer Tools pada browser, atau mengedit skrip JavaScript halaman secara langsung di konsol.
+3. **Request API Dapat Dikirim Tanpa Antarmuka Web (Bypass UI):**
+   Pengguna jahat (*attacker*) tidak memerlukan tombol fisik di halaman web untuk berinteraksi dengan API. Mereka dapat mengirimkan HTTP request (misalnya `DELETE /api/v1/coursework/<uuid>/` atau `POST /api/v1/coursework/`) secara langsung menggunakan perkakas seperti cURL, Postman, Python script, atau fungsi `fetch()` dari tab konsol browser.
+4. **Prinsip Keamanan Berlapis (*Server-Side Defense-in-Depth*):**
+   Server adalah satu-satunya otoritas yang tidak dapat dimanipulasi oleh klien. Pemeriksaan izin wajib berada di sisi server melalui *permission class* agar setiap request yang masuk selalu divalidasi identitas dan wewenangnya sebelum menyentuh logika database, sehingga integritas data tetap terlindungi dari serangan eskalasi hak akses (*privilege escalation*).
+
+---
+
+### 4. Jelaskan mengapa permintaan yang mengubah data tetap memerlukan token CSRF ketika API memakai SessionAuthentication! Mengapa test yang memakai force_authenticate tidak cukup untuk membuktikan bahwa perlindungan CSRF berjalan?
+
+**Mengapa permintaan pengubah data tetap memerlukan token CSRF pada `SessionAuthentication`:**
+1. **Cara Kerja Serangan CSRF (Cross-Site Request Forgery):**
+   Ketika pengguna login ke website portofolio, browser akan menyimpan cookie sesi (`sessionid`). Pada serangan CSRF, penyerang memancing pengguna yang sedang login untuk mengunjungi situs berbahaya milik penyerang. Situs berbahaya tersebut kemudian mengeksekusi skrip jahat yang mengirimkan request mutasi data (misalnya `DELETE /api/v1/coursework/<id>/`) ke website portofolio kita.
+2. **Perilaku Otomatis Browser:**
+   Karena request ditujukan ke domain portofolio, browser secara otomatis akan menyertakan cookie `sessionid` yang sah ke dalam header request, meskipun request tersebut berasal dari situs penyerang.
+3. **Peran Token CSRF sebagai Pembuktian Niat Pengguna (*Proof-of-Intent*):**
+   `SessionAuthentication` di DRF mewajibkan penyertaan token CSRF (melalui header `X-CSRFToken`) untuk semua HTTP method yang mengubah state data (`POST`, `PUT`, `PATCH`, `DELETE`). Situs jahat pihak ketiga tidak dapat membaca atau menyalin token CSRF dari cookie portofolio karena dibatasi oleh aturan keamanan browser **Same-Origin Policy (SOP)**. Akibatnya, request jahat dari situs penyerang tidak akan memiliki header `X-CSRFToken` yang valid dan server Django langsung menolaknya dengan status `403 Forbidden: CSRF Failed`.
+
+**Mengapa test yang memakai `force_authenticate` tidak cukup untuk membuktikan perlindungan CSRF:**
+- **`force_authenticate()` Melewati (*Bypasses*) Seluruh Alur Autentikasi dan CSRF:**
+  Method `force_authenticate(user=...)` milik `APIClient` adalah helper pengujian yang dirancang khusus untuk mempermudah pengetesan logika bisnis dan permission per-user secara terisolasi. Cara kerjanya adalah dengan langsung menyuntikkan objek `user` ke dalam `request.user` sebelum middleware Django bekerja.
+- **Middleware CSRF Tidak Dijalankan:**
+  Ketika menggunakan `force_authenticate`, alur pembuatan session sungguhan diabaikan, dan DRF menonaktifkan pengecekan `CsrfViewMiddleware` untuk request tersebut. Akibatnya, request pengujian akan selalu berhasil meskipun kita sama sekali tidak menyertakan header token CSRF ataupun cookie sesi.
+- **Pentingnya Pengujian Menggunakan `APIClient(enforce_csrf_checks=True)` dan `.login()`:**
+  Untuk benar-benar membuktikan bahwa pertahanan CSRF bekerja di dunia nyata, kita harus menginisialisasi `APIClient(enforce_csrf_checks=True)` dan memanggil method `.login(username=..., password=...)`. Pola ini menyimulasikan siklus sesi browser yang sesungguhnya, membuktikan bahwa permintaan mutasi tanpa header `X-CSRFToken` akan ditolak dengan `403 Forbidden`, dan hanya berhasil ketika header `X-CSRFToken` yang sah disertakan.
+
+---
+
+### AI Disclosures for Tugas 6
+
+Dalam pengerjaan Individual Assignment 6, saya menggunakan Gemini sebagai asisten pair-programming untuk membantu implementasi Django REST Framework (DRF), perancangan arsitektur API, pembuatan modal edit interaktif, serta penyusunan unit test berbasis peran.
+
+AI membantu saya dalam:
+- Mengidentifikasi model pilihan tugas mandiri (`Coursework`) dan menambahkan relasi `starred_by` dengan ManyToManyField ke model `User` beserta pembuatan dan penerapan file migrasinya (`0012_coursework_starred_by.py`).
+- Merancang `CourseworkSerializer` di `main/serializers.py` dengan penentuan field eksplisit, field terhitung read-only (`star_count`, `is_starred`, `starred_by_names`), serta pembersihan dan validasi input via `strip_tags` dan validasi minimal credits.
+- Mengimplementasikan API views berbasis fungsi (`@api_view`) di `main/api_views.py` (`coursework_list`, `coursework_detail`, dan `coursework_star`) dengan autentikasi `SessionAuthentication`, penanganan query filter pencarian & kategori, serta otorisasi empat peran menggunakan `IsPortfolioOwnerOrEditorOrReadOnly` dan `IsAuthenticated`.
+- Mendaftarkan rute API di `main/api_urls.py` di bawah prefix `/api/v1/coursework/`.
+- Memperbarui halaman `templates/coursework.html` dan menambahkan komponen modal popover baru `templates/components/coursework_edit_modal.html` agar antarmuka web mendukung pemuatan data via AJAX DRF murni, penambahan data, fitur toggle star instan, pengeditan data via PUT, dan penghapusan data via DELETE dengan umpan balik toast notifikasi.
+- Menyusun rangkaian unit test komprehensif di `main/tests_api_coursework.py` menggunakan `APITestCase` yang menguji keempat peran (Anonim, Regular User, Editor, Superuser), verifikasi integritas isi database, validasi sanitasi input, fitur star, serta verifikasi penegakan proteksi CSRF dengan `APIClient(enforce_csrf_checks=True)`.
+- Mengintegrasikan pengujian unit test baru ke dalam pipeline CI/CD GitHub Actions di `.github/workflows/ci-cd.yml`.
+
+Kendala, keterbatasan, dan validasi mandiri:
+- Saya menemukan bahwa pengujian sanitasi input yang menguji tag script HTML perlu disesuaikan dengan representasi tag yang benar-benar dibuang oleh `strip_tags` agar assertion error 400 Bad Request bekerja akurat.
+- Saya menguji langsung seluruh endpoint API melalui Browsable API dan console browser lokal untuk memastikan tidak ada konflik CSRF dan negosiasi konten berjalan sempurna.
+- Seluruh 31 unit test (`main.tests_api`, `main.tests_api_coursework`, dan `contacts`) telah dijalankan dan diverifikasi secara mandiri melalui terminal lokal dan dinyatakan lulus 100% tanpa error.
