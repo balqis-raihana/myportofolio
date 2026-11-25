@@ -14,12 +14,15 @@ from main.permissions import IsPortfolioOwnerOrReadOnly, IsPortfolioOwnerOrEdito
 from main.serializers import ExperienceSerializer, CourseworkSerializer
 
 
-# ==============================================================================
-# Experience / Projects API (Tutorial 07)
-# ==============================================================================
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_logout(request):
+    if request.auth is not None:
+        request.auth.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(["GET", "HEAD", "POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrReadOnly])
 def project_list(request):
     if request.method in ("GET", "HEAD"):
@@ -46,7 +49,6 @@ def project_list(request):
 
 
 @api_view(["GET", "HEAD", "PUT", "PATCH", "DELETE"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrReadOnly])
 def project_detail(request, project_id):
     experience = get_object_or_404(
@@ -74,7 +76,6 @@ def project_detail(request, project_id):
 
 
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def project_star(request, project_id):
     experience = get_object_or_404(Experience, pk=project_id)
@@ -91,7 +92,6 @@ def project_star(request, project_id):
 # ==============================================================================
 
 @api_view(["GET", "HEAD", "POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrEditorOrReadOnly])
 def coursework_list(request):
     if request.method in ("GET", "HEAD"):
